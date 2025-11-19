@@ -1,0 +1,46 @@
+RJM API Overview
+October 10, 2025
+⸻
+Purpose
+The RJM Packaging System has been formally codified into two APIs:
+1. Persona Database API (data layer)
+2. Packaging API (build layer)
+Together, these form a modular system that allows brands, agencies, and publishers to
+generate RJM persona programs directly from their own environments while all proprietary build
+logic remains securely housed within Real Juice Media.
+⸻
+Architecture
+MCP → RAG → Agentic → Persona Database API → Packaging API → LocalX (Delivery)
+• MCP (Model Context Protocol): defines the cultural and creative parameters.
+• RAG (Retrieval-Augmented Generation): maps those insights to behavioral and scale data.
+• Agentic Layer: converts insight into structured programs using RJM logic.
+• Persona Database API: hosts the 167 canonical RJM personas (expandable to 500+).
+• Packaging API: assembles brand-ready persona frameworks for activation.
+⸻
+Core Features
+• 167 personas mapped to LocalX inventory and LiveRamp IDs.
+• Proprietary Foreman build logic protected inside RJM.
+• Outputs include brand description, key identifiers, personas, insights, and demos.
+• Scalable design—each call generates a complete RJM persona package.
+• Manual export option for partners without API access.
+⸻
+Integration Readiness
+• JSON schemas completed for both APIs (10.10.25).
+• Spec sheets finalized and attached for partner review.
+• LocalX already recognizes all 167 personas.
+⸻
+Next Steps
+1. Provide specifications to Locality engineering and product teams.
+2. Schedule API test run inside LocalX (Q4 2025).
+3. Validate proof of concept through live campaign delivery.
+4. Expand dataset to 300–500 personas in early 2026.
+⸻
+Strategic Value
+• Establishes RJM as a programmable cultural layer—a bridge between data, creativity, and
+media.
+• Converts proprietary persona architecture into a scalable integration system.
+⸻
+© 2025 Real Juice Media. Proprietary and Confidential.
+All RJM frameworks, schema, and logic contained herein are the intellectual property of Real
+Juice Media.
+No reproduction, redistribution, or derivative use permitted without written consent.

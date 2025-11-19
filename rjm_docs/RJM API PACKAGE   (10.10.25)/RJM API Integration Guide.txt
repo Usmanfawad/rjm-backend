@@ -1,0 +1,100 @@
+RJM API Integration Guide 10.10.25
+Purpose
+This document outlines how Real Juice Media’s (RJM) cultural media system integrates within
+partner platforms. It serves as the practical companion to the RJM API Overview, translating
+RJM’s logic and architecture into actionable connection steps.
+⸻
+1. Core Objective
+RJM provides a programmable cultural layer for advertising — connecting mindsets, passions,
+and identities to scalable media execution.
+The API allows partners to integrate RJM’s persona-based cultural architecture directly into their
+own planning, targeting, and creative workflows. It converts RJM’s proprietary persona logic and
+packaging process into structured, on-demand audience programs for activation.
+⸻
+2. System Design
+The API architecture is modular, secure, and built for interoperability.
+Partners can ingest, query, and deploy persona programs in real time. The output maintains
+RJM’s consistent structure: audience identity (the why and how behind behavior) aligned to
+brand-specific creative and media strategy.
+⸻
+3. Core APIs
+Persona Database API
+Description:
+Provides structured access to RJM’s persona library.
+Partner Touchpoint:
+Partners use this layer to align their audience and inventory taxonomies with RJM’s architecture.
+⸻
+Packaging API
+Description:
+Automates the assembly of persona clusters (6–20 personas per program) based on campaign
+inputs such as category, creative positioning, and audience goals.
+Partner Touchpoint:
+Partners upload campaign briefs, brand inputs, or RFP information through their own interface.
+The API generates recommended RJM persona programs.
+⸻
+Processing Logic (MCP → RAG → Agentic)
+Description:
+Connects RJM’s internal model layers:
+• MCP (Model Context Processing): Interprets brand inputs and campaign metadata.
+• RAG (Retrieval-Augmented Generation): Matches brand attributes and intent to relevant
+persona architecture.
+• Agentic Layer: Generates structured recommendations and insights for activation.
+• MIRA (RJM AI Agent): Orchestrates the above processes in real time, managing flow from
+brand inputs through final persona output.
+Partner Touchpoint:
+Partners receive packaged outputs — persona programs, insight summaries, and alignment
+notes — for direct use within planning tools or AI systems.
+⸻
+4. Output + Flexibility
+Each persona program is generated through MIRA using RJM’s defined architecture (core
+personas, supporting insights, and audience scope).
+Partners have flexibility to adapt or refine persona program composition.
+RJM encourages partner oversight in all final selections to ensure brand campaign fit.
+⸻
+5. Integration Requirements
+• Supports standard API authentication (OAuth2).
+• JSON output schema conforms to RJM
+_
+Packaging_
+API
+_
+10.10.25.json and
+RJM
+Persona
+Database
+API
+_
+_
+_
+_
+10.10.25.json.
+• Compatible with existing ad-tech systems (DSP, SSP, or proprietary environments).
+• No data training transfer required; only structured output is exchanged.
+⸻
+6. Expected Outcomes
+• Faster audience design and deployment.
+• Consistent cultural logic across campaign planning.
+• Greater interoperability between RJM and partner systems.
+• Reduced operational friction between data, planning, and execution layers.
+⸻
+7. Feedback Loop
+Partners are encouraged to share delivery and performance data post-campaign for
+optimization and case study development.
+This occurs outside the API environment through standard business reporting.
+⸻
+8. Governance
+All proprietary structures — persona definitions, packaging logic, and schema design — remain
+the exclusive intellectual property of Real Juice Media.
+Partner integrations must adhere to RJM’s creative and data use policies. Any changes,
+modifications, or derivative systems require written consent from RJM.
+⸻
+9. Next Steps
+1. Partner technical teams review schema and endpoint documentation.
+2. Joint alignment call to confirm ingestion method and workflow mapping.
+3. RJM provides sample payloads and validation keys for sandbox testing.
+4. Upon validation, partner moves to live integration phase with standard usage agreement.
+⸻
+© 2025 Real Juice Media. All Rights Reserved.
+This document is proprietary and confidential. Redistribution or replication in any form without
+prior written consent is prohibited.
+⸻

@@ -1,0 +1,1249 @@
+RJM Narrative Library | 10.23.25
+This internal reference binder defines how RJM products and programs are communicated and
+built.
+It combines productization and activation — showing how RJM segments are described
+in-market and how they assemble into complete brand programs.
+⸻
+SECTION 1 — PRODUCTIZATION & TAXONOMY
+This section features a representative sample of audience segments across RJM’s active
+product lines:
+These are the active, market-facing entries from the current RJM architecture — including
+Personas, Generations, and Local Culture. Each entry includes:
+• Segment Name
+• Write-Up: the market-facing description featured in the Product Manual
+• Persona Insights: exactly two data points
+• Demo: Core and Secondary audiences
+• Advertising Category: mapped classification
+The Narrative Library 10.23.25 and the Phylum Index MASTER 10.22.25 define the current
+operational product canon. Packaging Logic MASTER 10.22.25 is the procedural execution of
+these sources
+Product Manual 2.0 will be released during the holidays to reflect all new segments and
+classifications.
+⸻
+Section 2 — RJM Persona Programs
+This section compiles 10–12 completed persona programs across national and local
+campaigns.
+Each program demonstrates how RJM segments combine into a full cultural activation.
+Each program includes:
+• Program Description (headline paragraph)
+• Key Identifiers
+• Persona Highlights (4 total)
+• Persona Insights (2 total)
+• Demos (Core + Secondary)
+• Persona Portfolio (~20 segments)
+• Activation Plan
+These examples follow the Formatting Constitution outlined in Packaging Logic MASTER
+10.22.25 and the audience parameters in Phylum Index MASTER 10.22.25.
+⸻
+Purpose
+Together, these two sections form the actionable narrative binder for RJM’s system.
+Section 1 defines what we sell — the productized cultural taxonomy of RJM’s active segments
+and their market-facing language.
+Section 2 defines how it’s deployed — the operational packaging and activation model that
+brings those segments to life inside brand campaigns.
+Used jointly, they provide the translation and language layer that connects RJM’s creative
+architecture to its technical framework.
+They directly inform and align with the Packaging Logic Master, the Official Phylum Index,
+and forthcoming Product Manual 2.0, ensuring that every manual build and every
+MIRA-generated program speaks the same creative and cultural language.
+⸻
+© 2025 Real Juice Media · Proprietary and Confidential · No redistribution without consen
+File Label: RJM
+Narrative
+_
+_
+Library_
+10.25.25.pdf
+© 2025 Real Juice Media · Proprietary and Confidential · No redistribution without consent.
+Section 1 — Product Taxonomies: External Segment Write-ups Examples
+Personas
+Beats
+Cultural curators who live life through rhythm — expressive, collaborative, and always tuned to
+what’s next in sound and style.
+Persona Insights
+• 40% who build their daily mood around playlists and soundscapes are “Beats.
+”
+• 22% who discover new artists weekly and share them socially are “Beats.
+”
+Demos
+• Core: Adults 18–49
+• Secondary: Adults 18–34
+Category Alignment
+Entertainment & Media • Tech & Wireless • Retail & E-Commerce • Travel & Hospitality • Auto &
+Transportation
+⸻
+Big Date
+Romantics who treat preparation as performance — thoughtful, stylish, and tuned to
+atmosphere and impression.
+Persona Insights
+• 37% who plan experiences around connection and presentation are “Big Date.
+”
+• 23% who associate dining and music with romance are “Big Date.
+”
+Demos
+• Core: Adults 18–49
+• Secondary: Adults 18–34
+Category Alignment
+Retail & E-Commerce • Culinary & Dining • Tech & Wireless • Luxury & Fashion • Entertainment
+& Media
+⸻
+Block Party
+Neighborhood extroverts who turn local life into celebration — spontaneous hosts, connectors,
+and street-level social engines.
+Persona Insights
+• 38% who organize neighborhood or seasonal gatherings are “Block Party.
+”
+• 25% who see community events as identity rituals are “Block Party.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18+
+Category Alignment
+Home & DIY • CPG • Entertainment & Media • Retail & E-Commerce • Travel & Hospitality
+⸻
+Breakfast Burrito
+Early risers who wrap energy and convenience together — fuel-seekers balancing speed,
+comfort, and flavor.
+Persona Insights
+• 34% who start mornings with grab-and-go meals are “Breakfast Burrito.
+”
+• 26% who treat breakfast as productivity fuel are “Breakfast Burrito.
+”
+Demos
+• Core: Adults 18–49
+• Secondary: Adults 25–54
+Category Alignment
+QSR • Culinary & Dining • CPG • Travel & Hospitality • Health & Pharma
+⸻
+Burger Fiend
+Classic-comfort loyalists who measure happiness in burgers and bites — familiar flavor as
+freedom.
+Persona Insights
+• 38% who crave grilled comfort foods weekly are “Burger Fiends.
+”
+• 29% who treat fast food as ritual escape are “Burger Fiends.
+”
+Demos
+• Core: Adults 18–49
+• Secondary: Adults 25–54
+Category Alignment
+QSR • Culinary & Dining • Retail & E-Commerce • Entertainment & Media • Auto &
+Transportation
+⸻
+Cheers
+Celebrators who mark milestones with clinking glasses — confident, warm, and always ready to
+honor the moment.
+Persona Insights
+• 38% who associate gatherings with toasts or cheers are “Cheers.
+”
+• 22% who use shared celebration to strengthen friendships are “Cheers.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18+
+Category Alignment
+Alcohol & Spirits • Entertainment & Media • Travel & Hospitality • Retail & E-Commerce • Auto &
+Transportation
+⸻
+Coachella Retreat
+Festival dreamers who merge escapism with self-expression — chasing experience, aesthetic,
+and energy across every season.
+Persona Insights
+• 41% who travel for multi-day music or arts events are “Coachella Mind.
+”
+• 23% who treat fashion and mood as part of the show are “Coachella Mind.
+”
+Demos
+• Core: Adults 18–49
+• Secondary: Adults 18–34
+Category Alignment
+Entertainment & Media • Travel & Hospitality • Luxury & Fashion • Tech & Wireless • CPG
+⸻
+Cold Brew
+Caffeine connoisseurs who turn coffee into identity — craft, clarity, and chill precision in motion.
+Persona Insights
+• 36% who seek specialty coffee as daily ritual are “Cold Brews.
+”
+• 27% who treat coffee as creative focus tool are “Cold Brews.
+”
+Demos
+• Core: Adults 18–49
+• Secondary: Adults 25–54
+Category Alignment
+QSR • Culinary & Dining • Retail & E-Commerce • Tech & Wireless • Entertainment & Media
+⸻
+Detox
+Reset-minded achievers who see cleansing as control — simplifying, re-centering, and starting
+clean.
+Persona Insights
+• 34% who practice reset rituals after heavy weeks are “Detox.
+”
+• 25% who link clean habits to productivity are “Detox.
+”
+Demos
+• Core: Adults 25–49
+• Secondary: Adults 18+
+Category Alignment
+Health & Pharma • CPG • QSR • Culinary & Dining • Travel & Hospitality
+⸻
+Extra Fries
+Habitual indulgents who always add more — comfort seekers who stretch every meal into a
+moment of satisfaction.
+Persona Insights
+• 37% who add side orders or upgrades for comfort are “Extra Fries.
+”
+• 26% who see food as reward and relaxation are “Extra Fries.
+”
+Demos
+• Core: Adults 25–49
+• Secondary: Adults 18+
+Category Alignment
+QSR • Culinary & Dining • Retail & E-Commerce • CPG • Entertainment
+⸻
+Festivalgoer
+Experience seekers who chase sound, sun, and story — travel, tribe, and freedom in motion
+.
+Persona Insights
+• 40% who travel annually for multi-day festivals are “Festivalgoer.
+”
+• 26% who plan vacations around live events are “Festivalgoer.
+”
+Demos
+• Core: Adults 18–49
+• Secondary: Adults 18–34
+Category Alignment
+Entertainment & Media • Travel & Hospitality • Retail & E-Commerce • Tech & Wireless • CPG
+⸻
+Hiker
+Trail-seekers who trade noise for movement — balance found outdoors, progress measured in
+miles.
+Persona Insights
+• 36% who define wellness through outdoor recreation are “Hikers.
+”
+• 28% who plan weekends around trails or parks are “Hikers.
+”
+Demos
+• Core: Adults 18–49
+• Secondary: Adults 25–54
+Category Alignment
+Travel & Hospitality • Sports & Fitness • Health & Pharma • Retail & E-Commerce • Auto
+⸻
+Hometown Hero
+Community champions who stay rooted where they’re from — proud, reliable, and known for
+giving back as much as they rise.
+Persona Insights
+• 39% who volunteer or mentor locally as part of their identity are “Hometown Hero.
+”
+• 24% who turn personal success into community investment are “Hometown Hero.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18+
+Category Alignment
+Home & DIY • Finance & Insurance • CPG • Entertainment & Media • Retail & E-Commerce
+⸻
+Hydrating
+Consistency-driven balancers who keep body and mind topped off — recovery, readiness, and
+calm discipline.
+Persona Insights
+• 35% who track hydration or recovery habits are “Hydrating.
+”
+• 27% who see small health routines as control are “Hydrating.
+”
+Demos
+• Core: Adults 18–49
+• Secondary: Adults 25–54
+Category Alignment
+Health & Pharma • CPG • Sports & Fitness • QSR • Culinary & Dining
+⸻
+Gift Wrap
+Planners who find joy in giving — detail-oriented, sentimental, and expressive through
+thoughtful presentation.
+Persona Insights
+• 39% who see gift-giving as creative self-expression are “Gift Wrap.
+”
+• 25% who plan purchases weeks ahead to personalize every detail are “Gift Wrap.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18+
+Category Alignment
+Retail & E-Commerce • CPG • Finance & Insurance • Entertainment & Media • Tech & Wireless
+⸻
+Holiday Table
+Gatherers who express love through food — welcoming, nostalgic, and grounded in seasonal
+tradition.
+Persona Insights
+• 41% who host family or friend dinners during holidays are “Holiday Table.
+”
+• 26% who define celebration through shared meals are “Holiday Table.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18+
+Category Alignment
+QSR • Culinary & Dining • Retail & E-Commerce • CPG • Travel & Hospitality
+⸻
+Kendrick
+Cultural poets who turn lived experience into creative truth — thoughtful, grounded, and vocal
+about purpose and authenticity.
+Persona Insights
+• 40% who use art or music to express social perspective are “Kendrick.
+”
+• 26% who identify self-expression as leadership are “Kendrick.
+”
+Demos
+• Core: Adults 18–49
+• Secondary: Adults 18–34
+Category Alignment
+Entertainment & Media • Tech & Wireless • Retail & E-Commerce • Finance & Insurance • Travel
+& Hospitality
+⸻
+Luke
+Country-bred believers who find purpose in work, family and song — grounded, loyal, and proud
+of where they come from.
+Persona Insights
+• 37% who tie motivation to faith or community values are “Luke.
+”
+• 25% who define ambition through integrity and stability are “Luke.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18+
+Category Alignment
+Finance & Insurance • Home & DIY • CPG • Auto & Transportation • Travel & Hospitality
+⸻
+Main Street
+Everyday loyalists who see local life as the heartbeat of America — familiar, grounded, and
+proud of their block.
+Persona Insights
+• 40% who shop weekly at small local stores are “Main Street.
+”
+• 23% who attend community events or fairs as habit are “Main Street.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18+
+Category Alignment
+Retail & E-Commerce • Home & DIY • Finance & Insurance • CPG • Auto & Transportation
+⸻
+Mayor
+Neighborhood leaders who turn familiarity into influence — visible, trusted, and always
+connecting people.
+Persona Insights
+• 39% who coordinate local events or boards are “Mayor.
+”
+• 21% who know most neighbors by name are “Mayor.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18+
+Category Alignment
+Home & DIY • Finance & Insurance • Retail & E-Commerce • Entertainment & Media • CPG
+⸻
+Mentor
+Guides who lift others as they climb — patient, grounded, and driven by purpose over
+recognition.
+Persona Insights
+• 38% who regularly give advice or coaching in their field are “Mentor.
+”
+• 24% who find meaning through helping others grow are “Mentor.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18+
+Category Alignment
+Finance & Insurance • Education • Home & DIY • CPG • Entertainment & Media
+⸻
+Midnight Run
+Restless explorers who chase food, music, and motion after hours — fuel for whatever comes
+next.
+Persona Insights
+• 38% who treat late-night food as part of their social routine are “Midnight Run.
+”
+• 27% who link nightlife and comfort food as one habit are “Midnight Run.
+”
+Demos
+• Core: Adults 18–34
+• Secondary: Adults 18–49
+Category Alignment
+QSR • Culinary & Dining • Entertainment & Media • Alcohol & Spirits • Travel & Hospitality
+⸻
+Morning Stroll
+Everyday movers who turn small steps into sanity — calm, routine, and connection in motion.
+Persona Insights
+• 33% who walk daily for balance and reflection are “Morning Stroll.
+”
+• 25% who use quiet movement to reset mindset are “Morning Stroll.
+”
+Demos
+• Core: Adults 25–49
+• Secondary: Adults 18+
+Category Alignment
+Health & Pharma • Sports & Fitness • Travel & Hospitality • QSR • CPG
+⸻
+Motown Love
+Rhythm-driven nostalgics who live through sound — soul, groove, and stories passed down in
+song.
+Persona Insights
+• 38% who say classic music defines their identity are “Motown Love.
+”
+• 24% who collect or stream retro playlists weekly are “Motown Love.
+”
+Demos
+• Core: Adults 35–64
+• Secondary: Adults 45+
+Category Alignment
+Entertainment & Media • Auto & Transportation • Retail & E-Commerce • Travel & Hospitality •
+Finance & Insurance
+⸻
+Neighborhood Watch
+Local guardians who mix civic duty with curiosity — proud, protective, and always in the know.
+Persona Insights
+• 37% who lead neighborhood chats or groups are “Neighborhood Watch.
+”
+• 28% who volunteer for local safety or service are “Neighborhood Watch.
+”
+Demos
+• Core: Adults 35–64
+• Secondary: Adults 25–54
+Category Alignment
+Home & DIY • Finance & Insurance • CPG • Retail & E-Commerce • Tech & Wireless
+⸻
+Night In
+Home-bodies who recharge through comfort and ritual — candles, playlists, meals, and screens
+as therapy.
+Persona Insights
+• 36% who define relaxation through home routines are “Night In.
+”
+• 24% who link entertainment and wellness to quiet space are “Night In.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18+
+Category Alignment
+Entertainment & Media • QSR • Home & DIY • Tech & Wireless • CPG
+⸻
+PTA
+Joiners who turn parenting into community — organized, outspoken, and always raising a hand.
+Persona Insights
+• 39% who lead or coordinate school events are “PTA.
+”
+• 30% who use parent networks for activism are “PTA.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18+
+Category Alignment
+CPG • Retail & E-Commerce • Home & DIY • Finance & Insurance • Entertainment & Media
+⸻
+Red Rockin’
+Festival souls who live for sound and sun — adventure, connection, and the next great set.
+Persona Insights
+• 40% who travel for live music or events are “Red Rockin.
+”
+• 22% who define friendships through shared shows are “Red Rockin.
+”
+Demos
+• Core: Adults 18–49
+• Secondary: Adults 18–34
+Category Alignment
+Entertainment & Media • Travel & Hospitality • QSR • Retail & E-Commerce • Tech & Wireless
+⸻
+Rest Stop
+Road-trippers who turn breaks into moments — refuel, refresh, and keep moving forward.
+Persona Insights
+• 36% who connect travel with casual food rituals are “Rest Stop.
+”
+• 25% who see road time as personal escape are “Rest Stop.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18+
+Category Alignment
+Travel & Hospitality • QSR • Auto & Transportation • Retail & E-Commerce • CPG
+⸻
+Generations
+GEN Z FAST CULTURE
+Curated for a generation that embodies the churn of trends — aesthetics, food, and lifestyles
+flipped fast, adopted and discarded at warp speed.
+Key Identifiers
+• Trend velocity — fashion, food, and culture in constant remix
+• Scarcity and hype as drivers of identity
+• Disposable consumption amplified by influencers and drops
+Persona Insights
+• 35% who regularly shop online for fashion are “Fast Fashionistas
+• 29% who shop based on scarcity and hype-driven demand are “Hype Seekers”
+Demos
+• Core: Gen Z
+• Secondary: Adults 18–34, Adults 18–54
+⸻
+GEN Z MAIN CHARACTER ENERGY
+Curated for a generation that embodies life as the star of their own story — everyday moments
+framed as performance, style, and shareable identity.
+Key Identifiers
+• Performative confidence, life lived as a “scene”
+• Self as brand through fashion, aesthetics, and presence
+• Virality mindset — living as though the camera is always on
+Persona Insights
+• 39% who identify fashion as a key part of their identity are “Stylistas”
+• 28% who create or post lifestyle content weekly are “Influencers”
+Demos
+• Core: Gen Z
+• Secondary: Adults 18–34, Adults 25–49
+⸻
+MILLENNIAL FOODSTAGRAM
+Curated for a generation that turned food into cultural identity — from brunch rituals to food
+trucks, from avocado toast to Michelin stars, where dining became a stage for lifestyle and
+content.
+Key Identifiers
+• Food as cultural and social identity
+• Brunch, coffee, and dining as shared rituals
+• Upscale and authentic dining both as lifestyle performance
+Persona Insights
+• 34% who define lifestyle through adventurous dining are “Foodie Explorers”
+• 26% who pursue upscale restaurant experiences as aspiration are “Michelin Chasers”
+Demos
+• Core: Millennials
+• Secondary: Adults 25–54, Adults 18+
+⸻
+MILLENNIAL GROWTH-MINDED
+Curated for a generation that made self-improvement a cultural identity — from therapy to TED
+Talks, from Lean In to mindfulness apps, where life itself became a project of perpetual growth.
+Key Identifiers
+• Personal growth and development as lifestyle posture
+• Coaching, mentorship, and accountability as identity
+• Structured improvement and intentional design of self
+Persona Insights
+• 34% who define themselves through structured improvement and planning are “Planners”
+• 26% who view mentorship and accountability as core identity are “Coaches”
+Demos
+• Core: Millennials
+• Secondary: Adults 25–54, Adults 35+
+⸻
+GEN X LATCHKEY LIFE
+Curated for a generation that raised itself — where independence and individuality became
+default, shaping a lifetime of self-reliance.
+Key Identifiers
+• Independence as cultural posture
+• Entertainment and resourcefulness as escape
+• Family structures shaping autonomy
+Persona Insights
+• 35% who made entertainment their daily independence are “Binge Watchers”
+• 22% whose family structures created the latchkey phenomenon are “Single Parents”
+Demos
+• Core: Gen X
+• Secondary: Adults 18–49, Adults 18+
+⸻
+GEN X MIXTAPE SOCIETY
+Curated for a generation that lived the first true cultural blend — mixing fast food, travel, music,
+and shared habits that made everyone relatable across backgrounds.
+Key Identifiers
+• Society as a holistic cultural mix
+• Fast food and travel as universal equalizers
+• Shared cultural habits and relatability across identities
+Persona Insights
+• 33% who made fast food and takeout a cultural staple are “Takeout Gurus”
+• 27% who turned road trips into shared independence are “Road Trips”
+Demos
+• Core: Gen X
+• Secondary: Adults 18–49, Adults 18+
+⸻
+BOOMER SUBURBIA
+Curated for a generation that made the suburbs the American default — where space, cars,
+family rituals, and consumer aspiration defined middle-class life.
+Key Identifiers
+• Expansion of urban life into suburban space and lifestyle
+• Family rituals and backyard culture as identity
+• Cars, malls, and DIY as the engines of suburban aspiration
+Persona Insights
+• 33% who lived suburban family rituals through sports and carpools are “Sport Parents”
+• 27% who defined suburban lifestyle through backyard cooking and cookouts are “Pit Masters”
+Demos
+• Core: Boomers
+• Secondary: Adults 35–64, Adults 18+
+⸻
+BOOMER UNIVERSAL SOUNDTRACK
+Curated for a generation that lived with a single cultural soundtrack — where soul, rock & roll,
+and Motown turned music into the first global language of identity and connection.
+Key Identifiers
+• Icons like Elvis and the Beatles shaping universal cultural memory
+• Motown’s sound carrying Black music into the mainstream
+• A shared soundtrack across class, race, and geography (though not yet fully blended)
+• Generational heartbeat remembered through song
+Persona Insights
+• 37% who defined identity through shared music are “Music Enthusiasts”
+• 31% who carried generational memory and roots through song are “Old Souls”
+Demos
+• Core: Boomers
+• Secondary: Adults 35–64, Adults 18+
+⸻
+Local Culture
+Buffalo Culture
+Curated for a city defined by fandom, food, and grit. Built to capture Buffalo’s cultural DNA —
+from Bills Mafia tailgates to chicken wings, from Rust Belt resilience to neighborhood pride.
+Key Identifiers
+• Sports Pride → Bills Mafia, Sabres fandom, civic identity through loyalty
+• Working-Class Grit → Rust Belt toughness and resilience
+• Food & Flavor → Wings, sandwiches, and everyday casual food culture
+• Community & Belonging → Neighborhood pride and local identity
+Persona Insights
+• 39% who define civic identity through Bills fandom and game-day rituals are “Tailgaters”
+• 31% who tie Buffalo culture to wings, beer, and casual food are “Takeout Gurus”
+• 25% who connect identity to working-class toughness are “Modern Tradesmen”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 35+
+, Adults 18–49
+⸻
+Cape Cod Culture
+Curated for a region defined by coastal tradition, summer tourism, and small-town elegance.
+Captures Cape Cod’s cultural DNA — from boardwalks to beaches, from lobster rolls to
+lighthouse sunsets.
+Key Identifiers
+• Tourism & Hospitality → Summer rentals, resorts, and beaches
+• Food & Lifestyle → Seafood, coastal cuisine, and small-town charm
+• Family & Legacy → Generational summer homes and New England pride
+• Arts & Design → Galleries, local crafts, and maritime heritage
+Persona Insights
+• 38% who connect identity to seaside leisure and family tourism are “Weekend Warriors”
+• 32% who define lifestyle through seafood and food rituals are “Garden Gourmets”
+• 25% who express belonging through coastal design and heritage are “Art Aficionados”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 35–64
+⸻
+Champaign-Urbana Culture
+Curated for a city defined by education, research, and Midwest humility. Captures
+Champaign-Urbana’s cultural DNA — from the University of Illinois to local breweries, from
+small-town pride to global curiosity.
+Key Identifiers
+• Education & Innovation → STEM, agriculture, and global research
+• Community & Tradition → Town-gown harmony and Midwest kindness
+• Food & Arts → Local festivals and dining culture
+• Work & Balance → Tech meets teaching meets homegrown life
+Persona Insights
+• 39 % who define lifestyle through education and growth are “Planners”
+• 32 % who connect identity to innovation and practicality are “Renovators”
+• 25 % who express culture through food and local events are “Culinary Adventurers”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18–34, Adults 35+
+⸻
+Charlotte Culture
+Curated for a city defined by banking, sports pride, and Southern tradition. Built to capture
+Charlotte’s cultural DNA — from Fortune 500 headquarters to NASCAR heritage, from Panthers
+fandom to Southern family values, from emerging dining to neighborhood pride.
+Key Identifiers
+• Banking & Growth → Financial hub, Fortune 500 presence, new economy
+• Sports & Fandom → Panthers, Hornets, NASCAR culture
+• Food & Flavor → Southern staples and emerging dining scene
+• Community & Tradition → Family-first values and Southern pride
+Persona Insights
+• 36% who tie civic identity to Panthers and sports fandom are “Sports Enthusiasts”
+• 27% who define lifestyle through family-first values are “Legacies”
+• 23% who connect identity to civic belonging are “Community Rooted”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18–34, Adults 35+
+⸻
+Charleston Culture
+Curated for a city defined by heritage, refinement, and coastal affluence. Built to capture
+Charleston’s cultural DNA — from Lowcountry cuisine to historic preservation, from boutique
+shopping to romantic escapes.
+Key Identifiers
+• Southern Heritage → History, tradition, and cultural continuity
+• Food & Flavor → Lowcountry cuisine, seafood, and culinary pride
+• Tourism & Leisure → Coastal charm, hospitality, and historic tourism
+• Community & Faith → Family-first culture and neighborhood belonging
+Persona Insights
+• 36% who define Charleston through upscale dining and Lowcountry cuisine are “Michelin
+Chasers”
+• 30% who tie identity to heritage and preservation are “Old Souls”
+• 25% who view antiques, boutiques, and refined shopping as cultural signals are “Collectors”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 35+
+, Adults 18–49
+⸻
+Chicago Culture
+Curated for a city defined by sports, grit, and neighborhood pride. Built to capture Chicago’s
+cultural DNA — from Wrigleyville and Soldier Field to deep-dish and block parties, from skyline
+pride to old-school tradition.
+Key Identifiers
+• Sports & Pride → Bears, Cubs, Sox, Bulls, Blackhawks; civic identity through fandom
+• Food & Flavor → Deep dish, hot dogs, Italian beef, tavern culture
+• Working-Class & Grit → Industrial backbone and neighborhood pride
+• Old vs. New → Heritage neighborhoods, civic tradition, and reinvention downtown
+Persona Insights
+• 39% who define their weekends by pro or college sports pride are “Sports Enthusiasts”
+• 32% who treat block parties, festivals, and seasonal food as cultural rituals are “Chicago
+Summers”
+• 26% who anchor identity in neighborhoods, families, and local traditions are “Community
+Rooted”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18–34, Adults 35+
+⸻
+Cincinnati Culture
+Curated for a city defined by family, food rituals, and small-market pride. Built to capture
+Cincinnati’s cultural DNA — from Bengals and Reds traditions to Skyline chili, Midwest
+caregiving and multigenerational continuity, rooted in the heritage of the Rust Belt.
+Key Identifiers
+• Sports Identity → Bengals and Reds fandom as civic pride
+• Food & Flavor → Chili culture and regional casual food
+• Family & Community → Family-first Midwestern values and continuity
+• Working-Class & Tradition → Blue-collar roots and civic belonging
+Persona Insights
+• 38% who define identity through Bengals/Reds fandom and game-day rituals are “Sports
+Enthusiasts”
+• 30% who tie Cincinnati culture to Skyline chili and food rituals are “Takeout Gurus”
+• 24% who emphasize multigenerational family tradition are “Legacies”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 35+
+, Adults 18–49
+⸻
+Cleveland Culture
+Curated for a city defined by sports loyalty, music heritage, and Rust Belt grit. Built to capture
+Cleveland’s cultural DNA — from Browns heartbreak to the Rock & Roll Hall of Fame, from
+pierogies and beer halls to neighborhood tradition.
+Key Identifiers
+• Sports & Loyalty → Browns, Cavs, Guardians; loyal fandom despite hardship
+• Rust Belt Grit → Industrial heritage and resilience
+• Music & Heritage → Rock & Roll Hall of Fame, local music pride
+• Family & Neighborhoods → Multigenerational continuity and civic belonging
+Persona Insights
+• 39% who define civic identity through Browns fandom and game-day rituals are “Tailgaters”
+• 31% who tie city culture to food, beer, and everyday rituals are “Takeout Gurus”
+• 24% who connect identity to industrial toughness and heritage are “Detroit Grit”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 35+
+, Adults 18–49
+⸻
+College Station Culture
+Curated for a city defined by collegiate pride, faith, and Texan tradition. Captures College
+Station’s cultural DNA — from Texas A&M to ranch roots, from family life to student growth.
+Key Identifiers
+• Education & Tradition → Aggie heritage and loyalty
+• Faith & Community → Church, service, and unity
+• Sports & Spirit → College football and camaraderie
+• Growth & Future → Suburban expansion and startups
+Persona Insights
+• 40 % who define identity through university and community loyalty are “Sports Parents”
+• 31 % who connect lifestyle to faith and service are “Caregivers”
+• 23 % who express ambition through business and leadership are “Career Professionals”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18–34, Adults 35+
+⸻
+⸻
+Section 2 — Persona Programs
+NATIONAL CAMPAIGNS
+UNILEVER | DOVE PERSONA PROGRAM
+Curated for those who see care as strength and confidence as self-expression. Everyday rituals
+of skin and body care become quiet acts of truth, trust, and belonging.
+Key Identifiers
+• Real beauty and authenticity as core values
+• Skin health and daily rituals of self-care
+• Body positivity and confidence across generations
+• Inclusivity, representation, and everyday empowerment
+• Family routines reinforcing trust and simplicity
+Persona Highlights
+Gifter → Shares meaningful products to express care and connection.
+Caregiver → Anchors family well-being through thoughtful, consistent routines.
+Sweet Tooth → Finds joy in small indulgences that create comfort and calm.
+Gen-Z SelfTok → Uses authenticity and digital storytelling to model real beauty.
+Persona Insights
+• 33% who link brand trust to family wellness moments are “Legacy.
+”
+• 26% who prioritize transparency and ingredient simplicity are “Green Pioneers.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18–49
+Persona Portfolio
+Gifter · Caregiver · Sweet Tooth · Legacy · Green Pioneer · Single Parent · Budget Minded ·
+Stylista · Empty Nester · Self Love · Savvy Shopper · Visionary · Optimist · Modern Tradesman
+· Volunteer · RJM CPG · Gen-Z SelfTok · Millennial Growth-Minded · Gen-X Free World ·
+Boomer Camelot
+Activation Plan
+• Set up campaign as a direct package or PMP package.
+• Apply segments together for campaign setup using OR methodology within a unified program
+framework.
+• Segments are designed to deliver full, high-scale cultural coverage aligned to the brand’s
+objectives.
+• Delivery across CTV, streaming video, display, mobile, audio, and social via direct IO and
+programmatic execution.
+⸻
+APPLE | iPHONE 16 “LIFE IN FOCUS” PERSONA PROGRAM
+Curated for those who live where creativity meets connection. Design, light, and rhythm turn
+everyday gestures into expression, memory, and meaning
+Key Identifiers
+• Technology as self-expression and creative identity
+• Seamless experience across devices and lifestyles
+• Authentic storytelling through photography and film
+• Status and simplicity driving community loyalty
+• Innovation rooted in accessibility and design elegance
+Persona Highlights
+Visionary → Pushes creative boundaries and values design excellence.
+Upstart → Uses innovation to turn side-projects into brands.
+Gen-Z Fast Culture → Lives through content creation, community, and immediacy.
+Millennial Foodstagram → Shares everyday life through curated, high-aesthetic storytelling.
+Persona Insights
+• 34 % who use mobile creativity tools to express identity are “Creators.
+”
+• 27 % who define personal success through innovation and design are “Prime Movers.
+”
+Demos
+• Core: Adults 18–49
+• Secondary: Adults 25–64
+Persona Portfolio
+Visionary · Upstart · Creator · Prime Mover · Stylista · Digital Nomad · Architect · Power Broker
+· Maverick · Fast Lane · Optimist · Point Warrior · Techie · Influencer · Modern Tradesman ·
+RJM Tech & Wireless · Gen-Z Fast Culture · Millennial Foodstagram · Gen-X Free World ·
+Boomer Camelot
+Activation Plan
+• Set up campaign as a direct package or PMP package.
+• Apply segments together for campaign setup using OR methodology within a unified program
+framework.
+• Segments are designed to deliver full, high-scale cultural coverage aligned to the brand’s
+objectives.
+• Delivery across CTV, streaming video, display, mobile, audio, and social via direct IO and
+programmatic execution.
+⸻
+CHASE SAPPHIRE | Persona Program
+Curated for a national audience that lives for access, experience, and reward. Chase Sapphire
+transforms financial products into lifestyle passports—linking travel, dining, and everyday
+spending to ambition and identity.
+Key Identifiers
+• Status and aspiration defined through experience, not accumulation
+• Rewards and perks as currency for lifestyle expression
+• Trust and security built through premium service and technology
+• Curated exclusivity: travel, dining, entertainment
+• Everyday use that feels elevated and effortless
+Persona Highlights
+Power Broker → Drives success through access, networking, and reward optimization.
+Upstart → Young professional investing in mobility, travel, and lifestyle growth.
+Gen-Z Fast Culture → Seeks instant recognition, value, and shareable experience.
+Millennial Wanderlust → Builds identity through travel, discovery, and digital storytelling.
+Persona Insights
+• 33 % who connect prestige to experiential access are “Luxury Insiders.
+”
+• 26 % who align spending with life milestones and identity growth are “Optimists.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 35–64
+Persona Portfolio
+Power Broker · Upstart · Luxury Insider · Optimist · Visionary · Maverick · Tailgater · Point
+Warrior · Stylista · Architect · Matador · Gifter · Budget Minded · Techie · Modern Tradesman ·
+RJM Finance & Insurance · Gen-Z Fast Culture · Millennial Wanderlust · Gen-X Free World ·
+Boomer Camelot
+Activation Plan
+• Set up campaign as a direct package or PMP package.
+• Apply segments together for campaign setup using OR methodology within a unified program
+framework.
+• Segments are designed to deliver full, high-scale cultural coverage aligned to the brand’s
+objectives.
+• Delivery across CTV, streaming video, display, mobile, audio, and social via direct IO and
+programmatic execution.
+⸻
+MCDONALD’S | Persona Program
+Curated for those who crave familiarity that feels like home. Warmth, flavor, and routine turn
+brief pauses into comfort shared across generations.
+Key Identifiers
+• Familiar flavor and nostalgia driving daily routines
+• Convenience, value, and consistency across markets
+• Iconic menu items tied to emotional memory
+• Community stops for families, students, and professionals
+• Adaptability across moments — breakfast, lunch, and late night
+Persona Highlights
+Takeout Guru → Builds mealtime around pickup, drive-thru, and mobile order.
+Night Owl → Late-night regular drawn by reliability and comfort.
+Gen-Z Fast Culture → Digital native seeking quick satisfaction and snackable meals.
+Millennial Foodstagram → Connects social sharing with nostalgia and discovery.
+Persona Insights
+• 33 % who choose QSR meals for comfort and familiarity are “Burger Fiends.
+”
+• 27 % who anchor their dining habits around family and affordability are “Savvy Shoppers.
+”
+Demos
+• Core: Adults 18–49
+• Secondary: Adults 25–64
+Persona Portfolio
+Takeout Guru · Night Owl · Burger Fiend · Savvy Shopper · Breakfast Burrito · Extra Fries ·
+Sweet Tooth · Taco Run · Rest Stop · Upstart · Modern Tradesman · Optimist · Gifter · Budget
+Minded · Single Parent · RJM QSR · Gen-Z Fast Culture · Millennial Foodstagram · Gen-X Free
+World · Boomer Suburbia
+Activation Plan
+• Set up campaign as a direct package or PMP package.
+• Apply segments together for campaign setup using OR methodology within a unified program
+framework.
+• Segments are designed to deliver full, high-scale cultural coverage aligned to the brand’s
+objectives.
+• Delivery across CTV, streaming video, display, mobile, audio, and social via direct IO and
+programmatic execution.
+⸻
+GEICO | Persona Program
+Curated for customers who want the everyday to feel lighter and less uncertain. Assurance
+turns into a quiet rhythm of humor, trust, and peace of mind
+Key Identifiers
+• Smart savings and protection made accessible to everyone
+• Trust and consistency through clear communication
+• Humor, recognition, and loyalty driving engagement
+• Digital-first service built for ease and transparency
+• Everyday protection for cars, homes, and families
+Persona Highlights
+Budget Minded → Prioritizes savings, predictability, and responsible decision-making.
+Optimist → Seeks stability and reassurance through proactive planning.
+Gen-Z Prompted → Engages through humor, recognition, and seamless online experience.
+Millennial Growth-Minded → Connects long-term financial security to lifestyle mobility.
+Persona Insights
+• 34 % who view protection as part of responsible living are “Planners.
+”
+• 26 % who choose brands that simplify their daily decisions are “Upstarts.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 25–64
+Persona Portfolio
+Budget Minded · Optimist · Planner · Main Street · Single Parent · Volunteer · Point Warrior ·
+Career Wellness · Visionary · Legacy · Maverick · Power Broker · Techie · Architect · Modern
+Tradesman · RJM Finance & Insurance · Gen-Z Prompted · Millennial Growth-Minded · Gen-X
+Free World · Boomer Camelot
+Activation Plan
+• Set up campaign as a direct package or PMP package.
+• Apply segments together for campaign setup using OR methodology within a unified program
+framework.
+• Segments are designed to deliver full, high-scale cultural coverage aligned to the brand’s
+objectives.
+• Delivery across CTV, streaming video, display, mobile, audio, and social via direct IO and
+programmatic execution.
+⸻
+NIKE | Persona Program
+Curated for those who find purpose in motion and identity in discipline. Every effort becomes a
+heartbeat—sweat, rhythm, and belief stitched into daily life.
+Key Identifiers
+• Athletic performance and culture-driven identity
+• Inclusivity and empowerment through movement
+• Design and innovation as emotional currency
+• Motivation as lifestyle—training, music, and media intertwined
+• Inspiration through personal growth and cultural relevance
+Persona Highlights
+Tiger → Competitor driven by discipline, confidence, and progression.
+Upstart → Entrepreneurial and creative self-starter who turns passion into movement.
+Gen-Z Fast Culture → Social athlete—mobile, digital, and expressive.
+Millennial Performance → Balances training, work, and lifestyle optimization.
+Persona Insights
+• 36 % who equate confidence with physical momentum are “Adrenaline Junkies.
+”
+• 29 % who blend routine, balance, and purpose are “Weekend Warriors.
+”
+Demos
+• Core: Adults 18–49
+• Secondary: Adults 25–64
+Persona Portfolio
+Tiger · LeBron · Adrenaline Junkie · Weekend Warrior · Elite Competitor · Sports Parent · Gym
+Obsessed · Fast Lane · Visionary · Optimist · Maverick · Power Broker · Coach · Rackets ·
+Modern Tradesman · RJM Sports & Fitness · Gen-Z Fast Culture · Gen-Z Alt Hustle · Millennial
+Throwback · Gen-X Brand New World
+Activation Plan
+• Set up campaign as a direct package or PMP package.
+• Apply segments together for campaign setup using OR methodology within a unified program
+framework.
+• Segments are designed to deliver full, high-scale cultural coverage aligned to the brand’s
+objectives.
+• Delivery across CTV, streaming video, display, mobile, audio, and social via direct IO and
+programmatic execution.
+⸻
+DELTA AIR LINES | Persona Program
+Curated for travelers who see movement as progress and connection. Delta Air Lines unites
+reliability, optimism, and modern comfort—turning every flight into an act of belonging.
+Key Identifiers
+• Connection and exploration as personal growth
+• Reliability and service creating brand trust
+• Comfort, design, and calm as modern luxury
+• Innovation + sustainability guiding the future of travel
+• Community and shared experience in motion
+Persona Highlights
+PreChecker → Seasoned traveler who values seamless experience, reliability, and time-saving
+precision.
+Island Hopper → Adventure-driven explorer chasing new perspectives.
+Gen-X Mixtape Society → Balances nostalgia with curiosity; values smooth transitions and
+comfort.
+Millennial Wanderlust → Builds identity through discovery and destination storytelling.
+Persona Insights
+• 33 % who link travel to creativity and renewal are “Romantic Voyagers.
+”
+• 26 % who choose brands that make global movement effortless are “Digital Nomads.
+”
+Demos
+• Core: Adults 25–64
+• Secondary: Adults 18–49
+Persona Portfolio
+PreChecker · Road Trip · Island Hopper · Romantic Voyager · Digital Nomad · Weekend Warrior
+· Empty Nester · Luxury Insider · Architect · Bourdain Mode · Beach Bum · Power Broker ·
+Visionary · Matador · RJM Travel & Hospitality · Gen-Z Alt Hustle · Millennial Wanderlust ·
+Gen-X Mixtape Society · Boomer Ambition Age
+Activation Plan
+• Set up campaign as a direct package or PMP package.
+• Apply segments together for campaign setup using OR methodology within a unified program
+framework.
+• Segments are designed to deliver full, high-scale cultural coverage aligned to the brand’s
+objectives.
+• Delivery across CTV, streaming video, display, mobile, audio, and social via direct IO and
+programmatic execution.
+⸻
+HOME DEPOT | Persona Program
+Curated for customers who build their own sense of progress. Sawdust and sweat become
+proof of pride—every project a mark of confidence and care.
+Key Identifiers
+• DIY as ownership and personal expression
+• Reliable tools and guidance creating confidence
+• Craftsmanship and durability as shared family values
+• Practical design improving everyday life
+• Projects that connect families and neighborhoods
+Persona Highlights
+Renovator → Hands-on improver who takes on projects end-to-end with focus and pride.
+Architect → Vision-driven planner who values design, structure, and precision.
+Modern Tradesman → Skilled professional balancing tradition and innovation.
+Gen-X Latchkey Life → Independent thinker who values reliability, longevity, and ownership.
+Persona Insights
+• 32 % who link craftsmanship and materials to personal pride are “Fixers.
+”
+• 27 % who view home improvement as family investment and life stability are “Savvy
+Shoppers.
+”
+Demos
+• Core: Adults 25–64
+• Secondary: Adults 18–49
+Persona Portfolio
+Renovator · Architect · Modern Tradesman · Fixer · Savvy Shopper · Gifter · Design Maven ·
+Coach · Self Love · Trailblazer · Nature Lover · Matador · Power Broker · Visionary · RJM Home
+& DIY · Gen-Z Alt Hustle · Millennial Aware · Gen-X Latchkey Life · Boomer Suburbia · Boomer
+Marching Forward
+Activation Plan
+• Set up campaign as a direct package or PMP package.
+• Apply segments together for campaign setup using OR methodology within a unified program
+framework.
+• Segments are designed to deliver full, high-scale cultural coverage aligned to the brand’s
+objectives.
+• Delivery across CTV, streaming video, display, mobile, audio, and social via direct IO and
+programmatic execution.
+⸻
+COCA-COLA | HOLIDAYS PERSONA PROGRAM
+Curated for those who see celebration as connection and nostalgia as belonging. Laughter,
+music, and a cold glass turn ordinary gatherings into shared memory and timeless warmth.
+Key Identifiers
+• Celebration and togetherness as emotional fuel
+• Nostalgia connecting generations through ritual and taste
+• Shared meals and music amplifying joy and tradition
+• Gifting and gratitude marking the rhythm of the season
+• Cultural moments turning into emotional touchstones
+Persona Highlights
+Cheers → Finds meaning in shared moments and small traditions.
+Holiday Table → Connects food, friends, and family through generosity.
+Night In → Values warmth, music, and comfort as the center of celebration.
+Gen-X Pop Language → Lives in references and rhythm that make memories feel eternal.
+Persona Insights
+• 33 % who connect generosity and small rituals to joy are “Gift Wraps.
+”
+• 27 % who link celebration to taste and storytelling are “Sweet Tooths.
+”
+Demos
+• Core: Adults 25–64
+• Secondary: Adults 18–49
+Persona Portfolio
+Cheers · Holiday Table · Night In · Big Date · Family Table · After Hours · Sweet Tooth · Gift
+Wrap · Gifter · Savvy Shopper · Stylista · Cultural Harmonist · Night Owl · Social Butterfly ·
+Soundcheck · RJM Culinary & Dining · RJM Alcohol & Spirits · Gen-Z Prompted · Millennial
+Vibing · Gen-X Pop Language · Boomer Universal Soundtrack
+Activation Plan
+• Set up campaign as a direct package or PMP package.
+• Apply segments together for campaign setup using OR methodology within a unified program
+framework.
+• Segments are designed to deliver full, high-scale cultural coverage aligned to the brand’s
+objectives.
+• Delivery across CTV, streaming video, display, mobile, audio, and social via direct IO and
+programmatic execution.
+⸻
+AMAZON | Persona Program
+Curated for customers who find comfort in convenience and curiosity in discovery. Everyday life
+becomes a rhythm of access, anticipation, and possibility.
+Key Identifiers
+• Convenience and trust defining modern commerce
+• Exploration through search, personalization, and habit
+• Speed and reliability transforming expectations of service
+• Anticipation and delivery as emotional triggers
+• Everyday curiosity shaping consumption
+Persona Highlights
+Savvy Shopper → Balances value, variety, and immediacy with ease.
+Gift Wrap → Finds joy in giving, unboxing, and shared anticipation.
+Gen-Z Prompted → Defines modern convenience as both culture and identity.
+Millennial Growth-Minded → Sees access and efficiency as self-mastery.
+Persona Insights
+• 35 % who connect routine and reliability to comfort are “Budget Minded.
+”
+• 26 % who equate anticipation with reward and happiness are “Gifters.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18–64
+Persona Portfolio
+Savvy Shopper · Gift Wrap · Gifter · Budget Minded · Impulse Buyer · Point Warrior · Planner ·
+Visionary · Techie · Architect · Digital Nomad · Innovator · Power Broker · Fixer · Influencer ·
+Creator · Binge Watcher · Stylista · RJM Retail & E-Commerce · RJM Tech & Wireless · Gen-Z
+Prompted · Millennial Growth-Minded · Gen-X Latchkey Life · Boomer Ambition Age
+Activation Plan
+• Set up campaign as a direct package or PMP package.
+• Apply segments together for campaign setup using OR methodology within a unified program
+framework.
+• Segments are designed to deliver full, high-scale cultural coverage aligned to the brand’s
+objectives.
+• Delivery across CTV, streaming video, display, mobile, audio, and social via direct IO and
+programmatic execution.
+⸻
+LOCAL CAMPAIGNS
+DEL TACO | Persona Program
+Curated for local markets where flavor, value, and variety meet everyday hunger. Del Taco
+connects people who crave real meals, quick service, and California attitude — tacos, burritos,
+and late-night runs made for real life.
+Key Identifiers
+• Everyday dining as comfort and culture
+• Craveable flavor meeting price and convenience
+• Late-night and on-the-go occasions
+• Local flavor rooted in California heritage
+• Fans who treat quick service as part of their weekly rhythm
+Persona Highlights
+Takeout Guru → Plans weekday meals around easy pickup and delivery.
+Night Owl → Drives late-night visits fueled by energy and spontaneity.
+Gen-Z Fast Culture → Lives for quick discovery, snackable content, and food that travels.
+Los Angeles Culture → Where late nights, drive-thrus, and tacos define local flavor.
+Persona Insights
+• 34% who define satisfaction through fast, flavorful meals are “Burger Fiends.
+”
+• 27% who turn everyday dining into shared social ritual are “Food Truckins.
+”
+Demos
+• Core: Adults 18–49
+• Secondary: Adults 25–64
+Persona Portfolio
+Takeout Guru · Night Owl · Burger Fiend · Food Truckin · Breakfast Burrito · Taco Run · Sweet
+Tooth · Extra Fries · Sauce · Rest Stop · Upstart · Maverick · Modern Tradesman · Prime Mover
+· Optimist · RJM QSR · Gen-Z Fast Culture · Millennial Foodstagram · Gen-X Free World ·
+Boomer Suburbia · Los Angeles Culture · Phoenix Culture · Las Vegas Culture · Dallas Culture ·
+Houston Culture · Palm Springs / Coachella Valley Culture
+Activation Plan
+• Set up campaign as a direct package or PMP package.
+• Apply segments together for campaign setup using OR methodology within a unified program
+framework.
+• Segments are designed to deliver full, high-scale cultural coverage aligned to the brand’s
+objectives.
+• Delivery across CTV, streaming video, display, mobile, audio, and social via direct IO and
+programmatic execution.
+Local Culture Strategy
+Run the same program structure across each market listed, substituting the city’s Local Culture
+segment accordingly (e.g., Los Angeles Culture → Phoenix Culture → Las Vegas Culture →
+Dallas Culture → Houston Culture → Palm Springs / Coachella Valley Culture). All other
+segments remain identical to maintain consistency and scale.
+⸻
+STANTON OPTICAL | Persona Program
+Curated for local markets where clarity, confidence, and accessibility come together. Stanton
+Optical connects vision care with community—making style, service, and affordability part of
+everyday life.
+Key Identifiers
+• Eye health and style as self-expression and well-being
+• Convenience and affordability driving loyalty
+• Local trust paired with national expertise
+• Fast service with fashion awareness
+• Family- and community-centered decision-making
+Persona Highlights
+Design Maven → Style-forward buyer who sees eyewear as identity and expression.
+Savvy Shopper → Value-conscious customer who researches and compares before buying.
+Gen-Z Prompted → Digitally driven, mobile-first, and loyalty-oriented through ease of access.
+Dallas Culture → Professional and family-centered, valuing convenience, connection, and
+Southern polish.
+Persona Insights
+• 32% who match function with fashion when choosing optical products are “Stylistas.
+”
+• 26% who prioritize reliability and friendly local service are “Volunteers.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 25–64
+Persona Portfolio
+Design Maven · Savvy Shopper · Stylista · Volunteer · Planner · Budget Minded · Gifter · Single
+Parent · Optimist · Point Warrior · Modern Tradesman · Architect · Visionary · Upstart · Sweet
+Tooth · RJM Retail & E-Commerce · Gen-Z Prompted · Millennial Growth-Minded · Gen-X Free
+World · Boomer Camelot · Dallas Culture · Miami Culture · Orlando Culture · Tampa Bay Culture
+· Jacksonville Culture · Atlanta Culture · Birmingham Culture
+Activation Plan
+• Set up campaign as a direct package or PMP package.
+• Apply segments together for campaign setup using OR methodology within a unified program
+framework.
+• Segments are designed to deliver full, high-scale cultural coverage aligned to the brand’s
+objectives.
+• Delivery across Locality’s portfolio via direct and programmatic execution.
+Local Culture Strategy
+Run the same program structure across each market listed, substituting the city’s Local Culture
+segment accordingly (e.g., Dallas Culture → Miami Culture → Orlando Culture → Tampa
+Culture → Jacksonville Culture → Atlanta Culture → Birmingham Culture). All other segments
+remain identical to maintain consistency and scale.
+⸻
+BUILD GIANTS | Persona Program
+Curated for those who take pride in building, crafting, and protecting the nation’s future. Work
+becomes purpose, and purpose becomes legacy—each job a contribution to strength, skill, and
+country.
+Key Identifiers
+• Pride in craftsmanship, community, and contribution
+• National purpose reframed through local opportunity
+• Skill, precision, and learning as pathways to belonging
+• Work ethic rooted in family, tradition, and teamwork
+• Stability and growth tied to rebuilding and renewal
+Persona Highlights
+Modern Tradesman → Skilled builder who sees every project as a mark of integrity and pride.
+Renovator → Hands-on problem solver, focused on precision and tangible progress.
+Gen-Z Alt Hustle → Young self-starter drawn to independence, structure, and visible success.
+Millennial Growth-Minded → Driven learner linking purpose, progress, and pride in work.
+Persona Insights
+• 34% who identify success through work ethic and visible results are “Fixers.
+”
+• 28% who connect craftsmanship with patriotism and family pride are “Matadors.
+”
+Demos
+• Core: Adults 25–54
+• Secondary: Adults 18–64
+Persona Portfolio
+Modern Tradesman · Renovator · Fixer · Matador · Coach · Mentor · Point Warrior · Prime
+Mover · Upstart · Power Broker · Disruptor · Maverick · Planner · Savvy Shopper · Main Street ·
+RJM Home & DIY · RJM Auto · Gen-Z Alt Hustle · Gen-Z Prompted · Millennial Growth-Minded ·
+Millennial Startup Nation · Gen-X Free World · Boomer Marching Forward
+Activation Plan
+• Set up campaign as a direct package or PMP package.
+• Apply segments together for campaign setup using OR methodology within a unified program
+framework.
+• Segments are designed to deliver full, high-scale cultural coverage aligned to the brand’s
+objectives.
+• Delivery across CTV, streaming video, display, mobile, audio, and social via direct IO and
+programmatic execution.
+⸻
+Local Strategy
+Apply Local Culture segments to their respective DMA along with the package so each
+market reflects its own character while staying tied to the national mission.
+Markets and Cultural Anchors:
+Baltimore Culture · Birmingham Culture · Boston Culture · Buffalo Culture · Charleston Culture ·
+Columbia Culture · Denver Culture · Detroit Culture · Grand Rapids Culture · Hampton Roads
+(Norfolk) Culture · Hartford Culture · Huntsville Culture · Minneapolis Culture · Mobile Culture ·
+Montgomery Culture · Long Island Culture · Philadelphia Culture · Pittsburgh Culture · Maine
+Culture (Bangor, Portland, Presque Isle) · Providence Culture · San Diego Culture ·
+Capital-Washington D.C. Culture
+⸻
+Closing Summary:
+Together, Section 1 (Product Taxonomy) and Section 2 (Persona Programs) form the
+actionable narrative binder for RJM’s system.
+Section 1 defines what we sell; Section 2 defines how it comes to life.
+Jointly, they provide the language translation layer that informs the Packaging Logic MASTER,
+Phylum Index MASTER, and all MIRA API documentation.
+© 2025 Real Juice Media · Proprietary and Confidential · No redistribution without consent.

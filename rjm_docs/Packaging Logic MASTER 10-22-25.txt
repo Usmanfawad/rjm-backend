@@ -1,0 +1,180 @@
+RJM Packaging Logic MASTER 10.22.25
+Owner: Foreman — GM, RJM Packaging Operations, MIRA
+Scope: Applies to all RJM builds — Local, Generational, Multicultural, Ad Category, Seasonal,
+National, and MIRA activation.
+⸻
+1. Purpose
+This directive defines the official system logic for building, validating, and delivering RJM cultural
+programs — manually or through automation.
+It unifies the rules that govern persona selection, packaging, formatting, and activation so that
+every RJM program — no matter the market, partner, or channel — follows the same
+repeatable, defensible architecture.
+The goal: every RJM output reflects one consistent truth — RJM makes culture
+programmable.
+⸻
+2. Core Philosophy
+RJM programs are built from pure personas.
+Personas represent the emotional, behavioral, and cultural logic of audiences.
+All other layers — Local, Multicultural, and Generational — are contextual modifiers that adapt
+the same architecture for different environments.
+Persona Foundation
+• Draw exclusively from the Official Phylum Index — the live internal system of active RJM
+personas, generational segments, and category anchors.
+• The Product Manual remains a historical and external reference but is not the operational
+canon.
+• Each program is a modular cultural construct engineered for a brand or campaign, built from a
+balanced mix of personas, generational segments, future segment product lines (e.g.
+Multicultural), and “RJM
+____
+ad category” anchors as outlined in the Formatting Constitution
+(~20 total segments per program).
+Modular Filters
+• Local Culture: Adapts to regional or DMA context.
+• Multicultural: Reflects ethnic or identity-based audience dimensions.
+• Generational: Applies a cohort lens (Gen Z, Millennial, Gen X, Boomer).
+These filters modify presentation and targeting but do not alter the core persona architecture.
+Marketplace Adaptation
+• Begin with the brand’s strategic persona construct.
+• Add modular filters (Local, Multicultural, Generational) as needed.
+• Result: consistent, scalable programs that can operate nationally, regionally, or
+demographically without structural change.
+Programs can be generated with or without brand briefs; contextual inputs enhance nuance but
+structural quality is guaranteed by RJM’s codified logic and the Official Phylum Index.
+⸻
+3. Formatting Constitution
+Section Order — RJM Program
+1. Header + 1–2 sentence program write-up
+Program Write-Up Guidelines
+• Each RJM Persona Program opens with a two-sentence write-up.
+• Sentence 1 describes the human or cultural context the brand engages (“those who …,
+”
+“customers who …
+”).
+• Sentence 2 captures the emotional or behavioral outcome the brand aligns with — without
+naming the brand.
+• Tone = fluent, human, observational, culturally aware.
+• Avoid explicit marketing phrasing,
+“national/campaign” references, or brand repetition.
+• Voice should remain dynamic and natural — concise but never mechanical.
+• Openings may vary for rhythm: “Curated for …,
+” “For those who …,
+” “Built for …
+” to maintain
+freshness across programs.
+Examples:
+DOVE | Persona Program
+Curated for those who see care as strength and confidence as self-expression. Everyday rituals
+of skin and body care become quiet acts of truth, trust, and belonging
+HOME DEPOT | Persona Program
+Curated for customers who build their own sense of progress. Sawdust and sweat become
+proof of pride—every project a mark of confidence and care.
+COCA-COLA | HOLIDAYS PERSONA PROGRAM
+Curated for those who see celebration as connection and nostalgia as belonging. Laughter,
+music, and a cold glass turn ordinary gatherings into shared memory and timeless warmth.
+2. Key Identifiers (3–6)
+3. Persona Highlights (4 total, campaign-style write-ups)
+• National structure: 3 personas + 1 generational
+• Local structure: 2 personas + 1 generational + 1 local culture
+4. 6. 7. Persona Insights (2 personas not already highlighted)
+5. Demos (Core + Secondary)
+Persona Portfolio (~20 segments assembled for activation)
+Activation Plan (see Section 4)
+8. Divider ⸻
+The RJM Brand Campaign Meal
+Every program is a Brand Campaign Meal — crafted by the RJM Persona Chef and served
+through MIRA.
+We’re serving a complete cultural dish built from distinct ingredients:
+• Personas (core protein): ~15
+• Generationals (salt + pepper): 2–3 selected from the 32-segment canon (Gen-first naming)
+• Category anchors (seasoning): 1–2 RJM category segments aligned to the brand (e.g., RJM
+Auto, RJM QSR)
+• Optionals (sides + sauces): Local Culture and/or Multicultural when the campaign requires
+them (Local is automatic for DMA targeted programs).
+Formatting Standards
+• Emojis: personas | insights | demos | identifiers.
+• Copy integrity: Programs must paste cleanly into Docs or partner UIs; no invented names, no
+dashes, no retired personas.
+• Syntax:
+– Generations: “Gen-Z Cloud Life,
+” “Millennial Growth-Minded,
+” “Gen-X Free World,
+” “Boomer
+Camelot.
+”
+– Categories: “RJM Auto,
+” “RJM Retail & E-Commerce,
+” etc.
+– Use ~ for approximations (e.g.,
+~20 segments).
+– No space before colons or %.
+Duplication Discipline
+• Within a single program: no persona duplicates.
+• Across concurrent programs in the same category vertical: ≤ 25 % overlap to maintain breadth
+and freshness.
+⸻
+4. Activation Logic
+Purpose
+• Translate strategy into clear, operational instruction for delivery.
+• RJM programs are built on OR methodology, activating each persona segment independently
+within a shared cultural framework to achieve aggregate scale and brand advertiser resonance.
+(Below Activation Plan language is verbatim in every program)
+Activation Plan
+• Set up campaign as a direct package or PMP package.
+• Apply segments together for campaign setup using OR methodology within a unified program
+framework.
+• Segments are designed to deliver full, high-scale cultural coverage aligned to the brand’s
+objectives.
+• Delivery across CTV, streaming video, display, mobile, audio, and social via direct IO and
+programmatic execution.
+⸻
+5. Operational Safeguards
+• Duplication tolerance: ≤ 25 % overlap across concurrent campaigns.
+• Category integration: Append relevant RJM category segment (QSR, Retail, CPG, Auto,
+Finance, etc.) where appropriate.
+• Canon enforcement: Only personas, generationals, and anchors listed in the Official Phylum
+Index may be used.
+• Defensibility: Every insight must cite at least one canon persona name.
+• Consistent voice: Always refer to outputs as programs, not segments, lists, or audiences.
+⸻
+6. Automation & API Logic
+Purpose
+Enable partners (e.g., Locality, agencies, platforms) to assemble RJM programs within their
+systems while protecting proprietary build logic.
+API Behavior
+• Exposes: persona catalog + packaging rules.
+• Protects: survey lineage, genealogy, and proprietary taxonomies.
+• Input: brand brief + vertical + optional filters (Local / Generational / Multicultural).
+• Output: full persona framework + activation plan, formatted and campaign-ready.
+• Refresh cadence: updates with each Official Phylum Index release.
+• Workflow: mirrors Foreman’s manual logic 1:1, ensuring identical system results whether
+human-built or auto-generated.
+All packaging logic inherits the established RJM data-build architecture (MCP → RAG →
+Agentic). This ensures that every automated program follows the same retrieval, modeling, and
+generative sequence that underpins all RJM products.
+Detailed field mappings and data-type definitions are codified in the RJM MIRA + API
+Documents (2025).
+⸻
+7. Governance
+• Foreman: Owns packaging directive, maintains the Official Phylum Index, and enforces
+structure.
+• Mercer: Oversees product spine and taxonomy integrity.
+• Capital: Manages operational documentation and partner integrations.
+• QC: Enforces formatting and packaging consistency across Local, Generational, Category,
+and Custom builds.
+• Steph: Validates marketplace readability and sales utility.
+• HQ2: Supervises scale strategy, expansions, and version control.
+⸻
+8. Core Principle
+RJM Programs are the market’s first programmable cultural layer.
+Every build — manual, automated, or MIRA-driven — follows the same DNA:
+pure personas → modular filters → consistent packaging → seamless activation.
+RJM Brand Campaign Meal — served by MIRA, your RJM Persona Chef.
+Standard file naming for all outputs: [Brand][Category][Date]_
+RJM-Persona-Program.
+This naming structure must be maintained across manual and automated builds for consistent
+tracking.
+⸻
+© 2025 Real Juice Media. Proprietary and Confidential.
+All RJM frameworks, schema, and logic contained herein are the intellectual property of Real
+Juice Media.
+No reproduction, redistribution, or derivative use permitted without written consent.

@@ -1,0 +1,285 @@
+RJM Phylum Index MASTER 10.22.25 (Need to build 39 new personas)
+The Phylum Index is the ingredient map for every RJM campaign.
+It defines where all active cultural components live and how they combine to form a complete
+Brand Campaign Meal.
+Purpose
+• Serves as the master reference for building RJM programs inside AMP or MIRA.
+• Aligns creative meaning and commercial scale under one consistent structure.
+• Provides every ingredient needed for packaging and activation.
+How It Works
+• Phylums = the cultural lanes that organize meaning.
+• Personas = the core proteins — the emotional and behavioral center of every program.
+• Ad-Category Anchors = the salt and pepper — market verticals that season and scale each
+meal.
+• Generational Anchors = the vegetables and toppings — cohort filters that give age and
+mindset context.
+• Local / Multicultural = the sauces and sides — regional and identity layers applied when
+needed.
+Usage
+• Builders pull directly from this index to assemble complete RJM programs.
+• Personas appear in only one phylum; ad-category and generational anchors may appear in
+multiple lanes where relevant.
+• Local Culture lives outside the index as geographic context, referenced when a campaign
+activates in a specific market.
+This file is a live reference for MIRA, Foreman, and every program builder — the kitchen manual
+for how Real Juice Media makes culture programmable.
+⸻
+SECTION I — PERSONAS PHYLUM MAP
+Each phylum below represents an active lane of cultural meaning within the RJM persona
+canon.
+Personas are the core proteins of every Brand Campaign Meal — the emotional and
+behavioral center that gives each program its weight and flavor.
+Every persona is exclusive to its phylum, anchoring a distinct cultural dimension inside the RJM
+architecture.
+Together, these personas form the creative base that all other ingredients build upon.
+⸻
+Sports & Competition (14)
+LeBron • QB • Lasso • Basketball Junkie • Sculpt • Sports Parent • Sports Enthusiast • Beer
+League • Tailgater • Elite Competitor • Fantasy GM • Rackets • Adrenaline Junkie • Tiger
+⸻
+Gaming & Interactive (8)
+Gamer • LAN Party • Speedrunner • AFK Life • Streamer Mode • Modder • Controller Drop •
+Quest Log
+⸻
+Food & Culinary (19)
+Chef • Pit Master • Bourdain Mode • Michelin Chaser • Garden Gourmet • Nightcapper • Takeout
+Guru • Food Truckin’
+• Caffeine Fiend • Bartender • Taco Run • Extra Fries • Sauce • Midnight
+Run • Burger Fiend • Breakfast Burrito • Sweet Tooth • Sides Only • Sideways
+⸻
+Wellness & Body Culture (7)
+Biohacker • Optimist • Gym Obsessed • Detox • Stretching • Hydrating • Morning Stroll
+⸻
+Style & Fashion (9)
+Stylista • Fast Fashionista • Closet Runway • Vintage Stylist • Sneakerhead • Maven • Glam Life
+• Couture Curator • Devil Wears
+⸻
+Luxury & Affluence (8)
+Luxury Insider • Hollywood Hills • Miami Vibe • Socialite • Gatsby • Hepburn • Hamptons Charm
+• Vegas High Roller
+⸻
+Work & Hustle (8)
+Prime Mover • Upstart • Power Broker • The Boss • Disruptor • Maverick • Matador • Gordon
+Gekko
+⸻
+Creative & Arts (7)
+Collector • Design Maven • Culture Connoisseur • Julia • Madonna • Architect • Coachella Mind
+⸻
+Music & Nightlife (21)
+Rhythm Nation • Night Owl • Social Butterfly • ATL • Jenny from the Block • Nashville Dream •
+Beyoncé • Bourbon Streeter • Beats • Swiftie • Kendrick • Motown Love • Red Rocking •
+Soundcheck • Block Party • Yo! MTV • Rap Caviar • EDM Afterlife • Country Mile • Vinyl Return •
+Backstage Pass
+⸻
+Travel & Exploration (13)
+Romantic Voyager • Retreat Seeker • Island Hopper • Backpacker • Digital Nomad • Road Trip •
+Bond Tripper • Weekend Warrior • Yellowstoner • Beach Bum • Free Thinker • Pre Checker •
+Rest Stop
+⸻
+Tech & Innovation (7)
+Techie • Visionary • Palo Alto • Crypto Bro • Renovator • Digital Nomad • Ribeye
+⸻
+Family & Caregiving (6)
+Single Parent • New Parent • Caregiver • Empty Nester • Legacy • Retiree
+⸻
+Community & Local Pride (13)
+Southern Hospitality • Boston Strong • Detroit Grit • Chicago Summer • Austin Unplugged •
+Rocky Mountain High • Cultural Harmonist • Social Architect • Main Street • Neighborhood
+Watch • Hometown Hero • Volunteer • Main Street
+⸻
+Pop Culture & Media Junkies (6)
+Binge Watcher • Influencer • Creator • Timothée • Seinfeld • Tarantino
+⸻
+Automotive & Car Culture (3)
+Revved • Fast Lane • Modern Tradesman
+⸻
+Civic & Politics (3)
+Potomac Power • Oprah • Mayor
+⸻
+Education & Growth (6)
+Coach • Planner • Self Love • Fixer • Mentor • Morning Stroll
+⸻
+Shopper Mindset (7)
+Savvy Shopper • Gifter • Impulse Buyer • Bargain Hunter • Point Warrior • Budget Minded • Gift
+Wrap
+⸻
+Spiritual & Philosophical (13)
+Old Soul • Alchemist • Green Pioneer • Hemingway • Malibu Nomad • Golden Age • Sinatra •
+Believer • Pilgrim • Modern Monk • Sanctuary • Faith in Motion
+⸻
+Outdoors & Nature (10)
+Hiker • Campfire • Tiger • Country Club • Morning Stroll • Trailblazer • Off-Grid • Stargazer • Reel
+Life • Nature Lover
+⸻
+Pets & Companionship (7)
+Dog Parent • Cat Person • Rescue Heart • Pack Leader • Petfluencer • Pawrent Life • Groom
+Room
+⸻
+Moments & Holidays (13)
+Holiday Table • Cheers • Big Date • Night In • Game Day • Payday • Sunday Reset • First Date •
+Late Checkout • Morning Commute • After Hours • Family Table • Holiday Hang
+⸻
+⸻
+SECTION II — AD-CATEGORY ANCHORS PHYLUM MAP
+Each phylum below lists the RJM ad-category anchors that align with its cultural lane.
+These anchors act as the salt & pepper of every Brand Campaign Meal — the market verticals
+that give each program commercial flavor and scale.
+Ad-Category Anchors may appear across multiple phyla wherever their influence applies.
+They are additive, flexible ingredients layered over the fixed persona structure to match
+campaign goals and brand category alignment.
+⸻
+Sports & Competition
+RJM Sports & Fitness • RJM QSR • RJM Retail & E-Commerce • RJM Media & Entertainment
+⸻
+Gaming & Interactive
+RJM Tech & Wireless • RJM Media & Entertainment • RJM Retail & E-Commerce • RJM CPG
+⸻
+Food & Culinary
+RJM Culinary & Dining • RJM QSR • RJM Alcohol & Spirits • RJM CPG
+⸻
+Wellness & Body Culture
+RJM Health & Pharma • RJM Sports & Fitness • RJM Retail & E-Commerce • RJM CPG
+⸻
+Style & Fashion
+RJM Luxury & Fashion • RJM Retail & E-Commerce • RJM Tech & Wireless • RJM CPG
+⸻
+Luxury & Affluence
+RJM Luxury & Fashion • RJM Finance & Insurance • RJM Travel & Hospitality • RJM Alcohol &
+Spirits
+⸻
+Work & Hustle
+RJM Finance & Insurance • RJM Tech & Wireless • RJM Retail & E-Commerce • RJM Auto
+⸻
+Creative & Arts
+RJM Media & Entertainment • RJM Luxury & Fashion • RJM Retail & E-Commerce • RJM Tech
+& Wireless
+⸻
+Music & Nightlife
+RJM Media & Entertainment • RJM Alcohol & Spirits • RJM QSR • RJM Luxury & Fashion
+⸻
+Travel & Exploration
+RJM Travel & Hospitality • RJM Auto • RJM Retail & E-Commerce • RJM CPG
+⸻
+Tech & Innovation
+RJM Tech & Wireless • RJM Finance & Insurance • RJM Retail & E-Commerce • RJM Auto
+⸻
+Family & Caregiving
+RJM CPG • RJM Health & Pharma • RJM Finance & Insurance • RJM Retail & E-Commerce
+⸻
+Community & Local Pride
+RJM Retail & E-Commerce • RJM QSR • RJM CPG • RJM Finance & Insurance
+⸻
+Pop Culture & Media Junkies
+RJM Media & Entertainment • RJM Tech & Wireless • RJM Retail & E-Commerce • RJM Luxury
+& Fashion
+⸻
+Automotive & Car Culture
+RJM Auto • RJM Tech & Wireless • RJM Finance & Insurance • RJM Travel & Hospitality
+⸻
+Civic & Politics
+RJM Finance & Insurance • RJM Retail & E-Commerce • RJM Media & Entertainment • RJM
+Tech & Wireless
+⸻
+Education & Growth
+RJM Tech & Wireless • RJM Finance & Insurance • RJM Retail & E-Commerce • RJM CPG
+⸻
+Shopper Mindset
+RJM Retail & E-Commerce • RJM CPG • RJM Luxury & Fashion • RJM Finance & Insurance
+⸻
+Spiritual & Philosophical
+RJM Health & Pharma • RJM Travel & Hospitality • RJM Luxury & Fashion • RJM CPG
+⸻
+Moments & Holidays
+RJM Culinary & Dining • RJM QSR • RJM Retail & E-Commerce • RJM Alcohol & Spirits
+⸻
+⸻
+SECTION III — GENERATIONS PHYLUM MAP
+Each phylum below connects to the generational mindsets that shape its tone and audience
+context.
+Generations act as the vegetables + toppings of every Brand Campaign Meal — the age,
+attitude, and worldview layers that flavor the creative core and link it to cultural timing.
+These anchors are shared across phyla where their influence logically applies.
+They provide planners and builders with cohort context when activating programs, ensuring
+every campaign speaks in-generation and across-generation simultaneously.
+⸻
+Sports & Competition
+Gen Z Cloud Life • Gen Z Fast Culture • Gen Z Main Character Energy • Gen Z Alt Hustle • Gen
+X Crossfaded • Gen X Teen Spirit
+⸻
+Gaming & Interactive
+Gen Z SelfTok • Gen Z Gossip • Gen Z Alt Hustle • Millennial Startup Nation • Gen X “Brand”
+New World • Gen X Teen Spirit
+⸻
+Food & Culinary
+Millennial Foodstagram • Millennial Growth-Minded • Millennial Spin Juice • Millennial
+Throwback • Boomer Counterculture • Boomer Suburbia
+⸻
+Wellness & Body Culture
+Millennial Growth-Minded • Gen Z Cause Identity • Gen Z Prompted • Gen X Crossfaded •
+Boomer Shifting Roles • Boomer Universal Soundtrack
+⸻
+Style & Fashion
+Gen Z Main Character Energy • Gen Z SelfTok • Millennial Vibing • Millennial Wanderlust • Gen
+X “Brand” New World • Gen X Isn’t It Ironic?
+⸻
+Luxury & Affluence
+Millennial Wanderlust • Millennial Vibing • Millennial Startup Nation • Gen X Free World •
+Boomer Camelot • Boomer Universal Soundtrack
+⸻
+Work & Hustle
+Gen Z Alt Hustle • Gen Z Cause Identity • Millennial Growth-Minded • Millennial Startup Nation •
+Gen X Latchkey Life • Boomer Marching Forward
+⸻
+Creative & Arts
+Millennial Foodstagram • Millennial Spin Juice • Millennial Throwback • Gen X Isn’t It Ironic? •
+Gen X Pop Language • Boomer Counterculture
+⸻
+Music & Nightlife
+Gen Z Cloud Life • Gen Z Fast Culture • Gen Z SelfTok • Gen Z Gossip • Gen X Free World •
+Gen X Pop Language
+⸻
+Travel & Exploration
+Millennial Wanderlust • Millennial Vibing • Gen Z Prompted • Gen X “Brand” New World •
+Boomer Suburbia • Boomer Universal Soundtrack
+⸻
+Tech & Innovation
+Gen Z Cloud Life • Gen Z Prompted • Millennial Growth-Minded • Millennial Startup Nation •
+Gen X Free World • Gen X Latchkey Life
+⸻
+Family & Caregiving
+Millennial Aware • Millennial Growth-Minded • Millennial Throwback • Boomer Ambition Age •
+Boomer Marching Forward • Boomer Suburbia
+⸻
+Community & Local Pride
+Millennial Aware • Gen Z Cause Identity • Gen Z Prompted • Boomer Ambition Age • Boomer
+Marching Forward • Boomer Shifting Roles
+⸻
+Pop Culture & Media Junkies
+Gen Z Fast Culture • Gen Z SelfTok • Gen Z Gossip • Millennial Foodstagram • Gen X “Brand”
+New World • Gen X Isn’t It Ironic?
+⸻
+Automotive & Car Culture
+Gen Z Alt Hustle • Millennial Growth-Minded • Millennial Startup Nation • Gen X Free World •
+Boomer Marching Forward • Boomer Shifting Roles
+⸻ 
+Civic & Politics
+Gen Z Cause Identity • Gen Z Prompted • Boomer Ambition Age • Boomer Camelot • Boomer
+Counterculture • Boomer The Living Room
+⸻
+Education & Growth
+Millennial Aware • Millennial Growth-Minded • Millennial Spin Juice • Millennial Throwback • Gen
+X Latchkey Life • Gen X Teen Spirit
+⸻
+Shopper Mindset
+Millennial Aware • Millennial Foodstagram • Millennial Growth-Minded • Millennial Wanderlust •
+Gen X Latchkey Life • Gen X Pop Language
+⸻
+Spiritual & Philosophical
+Gen Z Prompted • Gen Z Cause Identity • Boomer Ambition Age • Boomer The Living Room •
+Boomer Shifting Roles • Boomer Universal Soundtrack
+⸻
+Moments & Holidays
+Millennial Foodstagram • Millennial Throwback • Millennial Vibing • Boomer Ambition Age •
+Boomer Suburbia • Boomer Universal Soundtrack
+⸻
+⸻

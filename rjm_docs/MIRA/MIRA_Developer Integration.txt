@@ -1,0 +1,115 @@
+MIRA | Developer Integration Notes (10.12.25)
+Purpose
+MIRA is the closed-loop reasoning engine that powers all RJM persona programs.
+These notes explain how to integrate MIRA into partner systems (LocalX, Ribeye, etc.) without
+exposing its internal logic.
+⸻
+1. Architecture Overview
+MIRA exists in three layers:
+1. Data Layer — Product Manual
+Continuously expanding audience segment library with phylum, category, and demo metadata
+2. Reasoning Layer — MIRA Brain
+The proprietary text corpus and logic rules that decide persona selection, balance, and
+narrative style.
+3. Access Layer — API & Schemas
+JSON schemas define how external systems send inputs (briefs, filters) and receive outputs
+(persona programs).
+External partners never access the reasoning layer.
+They only call the API endpoint → receive structured packages.
+⸻
+2. Integration Workflow
+Inputs accepted by API
+• brief
+_
+text (string of brand or campaign description)
+• brand
+name
+_
+• category (e.g., QSR, Finance, Retail)
+• filters (Local, Multicultural, Generational)
+• personas
+_
+requested (integer 6–20)
+Internal flow
+1. API passes request to the MIRA containerized model.
+2. MIRA parses the brief → identifies cues → selects personas → generates Key Identifiers,
+Insights, and Write-Up text.
+3. API returns a fully formatted persona program object ready for activation.
+Output object
+• Header (Brand | Persona Framework)
+• Key Identifiers
+• Personas (name + category + phylum)
+• Insights
+• Demos
+• Activation Plan
+All formatting follows Packaging Logic 10.10.25.
+⸻
+3. Technical Implementation
+• Containerize MIRA using Docker or equivalent.
+• Load the following inputs into the container:
+• MIRA
+_
+Reasoning_
+Architecture
+_
+10.12.25.pdf (reasoning corpus)
+• RJM
+_
+Packaging_
+API
+_
+v1.json and RJM
+Persona
+DB
+API
+_
+_
+_
+_
+v1.json (schemas)
+• Product
+Manual
+_
+_
+v1.csv (dataset)
+• Bind API endpoints:
+/package
+_
+build → calls Packaging schema
+/persona
+_
+lookup → calls Persona DB schema
+/mira
+_generate → invokes reasoning model
+• Runtime: Python 3.11+
+, FastAPI or Flask framework (container should have at least 2 GB
+RAM).
+• Authentication: OAuth 2.0 Bearer token; 100 calls/min rate limit.
+⸻
+4. Protection & Governance
+• The reasoning corpus and model weights are encrypted and read-only.
+• Only RJM controls training updates.
+• Partners receive call access only (no ability to view, edit, or clone logic).
+• Version control via MIRA
+_
+v1 → v1.1 → v2 with backward compatibility.
+• Review cadence: quarterly, synced with Product Manual refresh.
+⸻
+5. Extensibility
+MIRA supports additive modules:
+• Local Culture
+• Multicultural
+• Generational
+Future modules can be appended as new endpoints without altering the core reasoning.
+All updates remain backward compatible with previous APIs.
+⸻
+6. Summary
+MIRA = Reasoning Intelligence (black-box) + Product Data + API Interface.
+Developers integrate the interface; RJM retains the intelligence.
+Inputs → MIRA → Outputs.
+Simple, secure, and scalable.
+⸻
+MIRA turns brand briefs into market-ready persona programs in one secure API call
+© 2025 Real Juice Media. Proprietary and Confidential.
+All MIRA logic and integration architecture are the intellectual property of Real Juice Media. No
+reproduction or redistribution without written consent.

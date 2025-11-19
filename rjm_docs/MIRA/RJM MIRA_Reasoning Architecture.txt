@@ -1,0 +1,198 @@
+RJM MIRA: Reasoning Architecture (10.12.25)
+The internal reasoning codex that documents exactly how RJM thinks, decides, and writes.
+This is the black-box foundation for the API layer and any future deployment.
+⸻
+I: Purpose | Why Mira Exists
+MIRA is RJM’s cognitive core — the closed-loop reasoning system that transforms briefs, cues,
+and cultural context into finished persona programs.
+It functions as the “why” engine between data (Product Manual) and delivery (API). Where the
+API executes structure, Mira decides meaning.
+Goal: Replicate RJM’s human creative judgment in machine-readable logic without exposing it.
+Every output must feel like it was hand-built by Foreman.
+⸻
+II: Core Philosophy | How RJM Thinks
+Culture first. Personas are not data points — they’re living behaviors and identities.
+Programs are communities. A package is a micro-society of mindsets that collectively explain
+a brand’s place in culture.
+Coherence over coverage. Every persona must reinforce the emotional through-line.
+Simplicity with Conviction. Write less but say something true.
+⸻
+III. Reasoning Process | From Brief to Program
+1: Interpret the Brief
+Mira extracts signals from any input — formal brief or intuitive prompt.
+Typical cues include:
+• Product category (QSR, Finance, Auto, etc.)
+• Brand values (family, innovation, heritage)
+• Tone of voice (playful, premium, earnest)
+• Cultural anchors (food, fashion, sports, music)
+• Intended audience or demo (if given)
+2: Map Cues to Phyla
+Each cue is matched to RJM’s 19 phylum lanes.
+Example rule:
+If "family"
+If "innovation"
+If "style" or "beauty"
+→ Family & Caregiving phylum
+→ Tech & Innovation
+→ Style & Fashion
+Multiple lanes can trigger simultaneously.
+3. Select Core Personas
+For each triggered phylum, Mira selects 1–3 personas using weighted criteria:
+• Category alignment (brand ↔ vertical)
+• Behavioral complementarity (not redundant archetypes)
+• Cultural diversity (across gender, age, ethnicity)
+• Emotional tone fit (with brand voice)
+Example: a QSR brief with cues “family” and “value” would trigger the Family & Caregiving +
+Everyday Life phyla → core personas such as Budget Minded + Single Parent + Legacy.
+Result → 6–12 core personas forming the program’s cultural spine.
+4. Balance Supporting Personas
+Mira adds contrast and depth:
+If core = Wellness/Discipline bias → add one Indulgence persona.
+If core = Luxury/Status bias → add one Authenticity persona.
+Target range: 12–15 personas (base package) or up to 20 with additives.
+Balance is what keeps cultural programs believable — contrast makes every system feel
+human.
+5. Apply Additive Modules
+Add Local / Multicultural / Generational segments if inputs require. Each is additive, never
+replacing core personas.
+6. Generate Key Identifiers
+Mira abstracts the package into 3–6 macro themes (verbs or nouns only).
+Algorithm: cluster persona keywords → summarize into human readable anchors.
+Example: “Family & Celebration • Health & Habit • Style & Identity.
+”
+7. Compose Write-Ups
+Narrative rules:
+• 1–2 sentences.
+• Lead with cultural truth, not brand name.
+• Use parallel structure and musical rhythm (phrasing ≈ 8–12 words per beat).
+• Never say “target audience.
+” Always say “built for…
+” or “captures…
+”
+Tone = strategic clarity + emotional resonance.
+8. Draft Activation Plan
+Mira outputs 3–5 bullets linking program logic to media execution:
+• Run as full package (PMP grouping).
+• Identify top performers post-flight.
+• If Locality: “Prioritize 4 core personas if ops constrained.
+”
+9. Finalize Formatting
+Applies emojis ( ), divider rules, and naming syntax automatically.
+⸻
+IV. Pseudocode Summary
+INPUT: brief, category, optional
+_
+DATASET: Product
+Manual
+167
+filters
+_
+_
+Parse(brief) → extract
+_
+cues()
+Match(cues) → phyla
+Select(core
+_personas) from Product
+_
+Manual where phylum ∈ matched
+_phyla
+Balance() → add
+_
+supporting_personas
+If filters: append(Local, Multicultural, Generational)
+Generate(Key_
+Identifiers)
+Compose(WriteUp)
+Build(ActivationPlan)
+Format(Output)
+RETURN RJM
+Persona
+_
+_
+Program
+⸻
+V.. Narrative Generation | Voice DNA
+Mira writes like RJM speaks:
+• Tone: Confident but human.
+• Structure: Short lead sentence + compound expansion.
+Movement is purpose — every stride a declaration.
+” // [clean break → drive-line]
+• Cadence: Every line could read aloud on a pitch call.
+• Vocabulary: Cultural, not corporate. No jargon, no dash clutter.
+Never generic — every sentence should sound like it could open a campaign.
+• Emotional Center: Optimism rooted in realism.
+Guiding maxim →
+“Simplicity with Conviction.
+”
+Sample Cadence Annotation:
+“Family is ritual — the kitchen table as stage.
+” // [short beats → intentional pause]
+“Flavor is identity — every bite a signal of home.
+” // [rhythm pivot → resolve]
+⸻
+VI. Additive Modularity | Local / Multicultural / Generational
+Rules embedded for each filter:
+If local
+_
+culture != null → append(Local
+_
+Segment)
+If multicultural != null → append(MC
+_
+Segment)
+If generation != null → append(Gen
+_
+Segment)
+Each module is tagged in metadata but seamlessly integrated into output. All remain within
+same format and activation logic.
+⸻
+VII. Activation Intelligence
+Mira understands delivery constraints:
+• Anticipates scale realities (typically 2–6 % of universe) before recommending structure.
+(Derived from persona-universe estimates within LoopMe / Ribeye datasets — reference only.)
+• Ops limits (too many line items).
+• Adaptive recommendation → flag core 4 personas for fallback execution.
+Outputs always contain a clear, ready-to-run instruction block.
+⸻
+VIII. Black-Box Protection Language
+Mira Brain is a compiled reasoning engine.
+Partners interact only through approved API endpoints.
+Source logic, weights, and training data remain exclusive to Real Juice Media. Any replication,
+reverse engineering, or derivative use is strictly prohibited.
+⸻
+IX. Versioning & Extensibility
+Mira Brain is modular and versioned.
+Future updates can include:
+• New personas (Product Manual v2+)
+• New reasoning modules (e.g., Locality QSR Blend)
+• Partner-specific endpoints (/custom
+_package)
+Each extension is additive and does not alter core reasoning.
+• Each Mira version maintains backward compatibility with all prior RJM APIs, ensuring no
+partner re-integration is ever required.
+Version control: v1 → v1.1 → v2 etc.
+All changes logged in Changelog.md and synced with API schema refresh.
+⸻
+X. Governance & Ownership
+Role Responsibility
+Foreman Owns reasoning directive; maintains core logic.
+Mercer Ensures persona taxonomy and phylum integrity.
+Capital Translates reasoning into partner documentation and maintains
+integration sync (API ↔ Brain).
+QC Team Validates outputs for tone and format.
+HQ2 Oversees version release and scale strategy.
+Mira Brain repository maintained in encrypted storage under HQ2 jurisdiction
+Reasoning logic and training files are reviewed quarterly in sync with the Product Manual
+refresh cycle to keep alignment between data and cognition
+⸻
+XI. Core Principle | Final Mantra
+RJM programs translate culture into media.
+Every package — manual or machine — follows the same sequence:
+Brief → Interpretation → Persona Selection → Narrative → Activation → Delivery.
+Mira Brain is that sequence made programmable.
+⸻
+© 2025 Real Juice Media. Proprietary and Confidential.
+All RJM schema, logic, and reasoning architecture are the intellectual property of Real Juice
+Media. No reproduction or redistribution without written consent.
+⸻
