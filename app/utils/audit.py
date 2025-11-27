@@ -24,9 +24,9 @@ async def create_audit_log(
     
     Args:
         session: Database session
-        action: Action name (e.g., 'user.created', 'api.call', 'rjm_document.created')
+        action: Action name (e.g., 'user.created', 'api.call', 'test_item.created')
         user_id: User ID who performed the action (if authenticated)
-        resource_type: Type of resource affected (e.g., 'user', 'rjm_document')
+        resource_type: Type of resource affected (e.g., 'user', 'test_item')
         resource_id: ID of the resource affected
         request: FastAPI Request object (for IP, user agent, etc.)
         status_code: HTTP status code

@@ -1,124 +1,165 @@
-## RJM MIRA Backend Overview
+# RJM MIRA Backend Documentation
 
-This backend implements a lightweight version of RJM's MIRA engine on top of the RJM backend core.
+## Overview
 
-It:
+The RJM MIRA Backend implements the **RJM INGREDIENT CANON 11.26.25** specification, providing a complete persona packaging system for advertising campaigns.
 
-- Accepts **brand briefs** and structured inputs.
-- Uses **OpenAI + Pinecone** over the RJM document corpus.
-- Returns **Persona Programs** that follow RJM Packaging Logic, Phylum Index, and Narrative Library rules.
+## Architecture
 
----
+### Core Components
 
-## Endpoints
+1. **`rjm_ingredient_canon.py`** - The authoritative source for all RJM data:
+   - Category → Persona Map (13 categories)
+   - Phylum Index (22 phyla)
+   - Ad-Category Anchor Segments (14 anchors)
+   - Generations (32 segments across 4 cohorts)
+   - Multicultural Expressions (30 expressions across 6 lineages)
+   - Local Culture DMA Segments (125 markets)
 
-- **POST `/v1/rjm/sync`**
-  - Reads all `.txt` files under `RJM_DOCS_DIR`.
-  - Stores metadata + hashes in the `rjm_documents` table (SQLModel).
-  - Embeds changed documents and upserts vectors into Pinecone (namespace `rjm-docs`).
-  - Deletes stale vectors if a file is removed.
-
-- **POST `/v1/rjm/generate`**
-  - **Purpose**: Generate a single RJM Persona Program.
-  - **Request body** (`GenerateProgramRequest`):
-    - `brief` – brand brief or intuitive text prompt.
-    - `brand_name` – advertiser / client name.
-    - `category` – ad vertical (QSR, Auto, Finance, Retail, etc.).
-    - `personas_requested` – integer 6–20.
-    - `filters`:
-      - `local_culture` – bool.
-      - `generational` – bool.
-      - `multicultural` – bool.
-  - **Response** (`GenerateProgramResponse`):
-    - `program_json` (`ProgramJSON` – aligned with RJM Packaging API v1 output schema):
-      - `header` – `[Brand] | Persona Framework`.
-      - `key_identifiers` – 3–6 macro themes.
-      - `personas` – 6–20 objects `{ name, category, phylum }`.
-      - `persona_insights` – up to 3 bullets.
-      - `demos` – `{ core, secondary }`.
-      - `activation_plan` – 3–5 bullets.
-    - `program_text` – formatted text version:
-      - Header + 1–2 sentence write-up (RJM voice).
-      - Key Identifiers (🔑).
-      - Personas (✨).
-      - Persona Insights (📊).
-      - Demos (👥).
-      - Activation plan.
-      - Divider `⸻`.
+2. **`rjm_rag.py`** - RAG pipeline + OpenAI generation
+3. **`router.py`** - API endpoints and output formatting
+4. **`category_mapping.py`** - Backward-compatible wrapper
 
 ---
 
-## RAG + MIRA flow
+## API Endpoints
 
-Implementation lives in:
+### POST `/v1/rjm/generate`
 
-- `app/services/rjm_rag.py`
-- `app/api/rjm/router.py`
-- `app/api/rjm/schemas.py`
+Generate a persona program from a brand name and brief.
 
-### High-level steps
+**Request:**
+```json
+{
+  "brand_name": "L'Oréal",
+  "brief": "Beauty brand focused on ritual, self-expression, and confidence."
+}
+```
 
-1. **Sync / Indexing (`/v1/rjm/sync`)**
-   - Load RJM docs from `RJM_DOCS_DIR`:
-     - `Packaging Logic MASTER 10-22-25.txt`
-     - `Phylum Index MASTER 10-22-25.txt`
-     - `Narrative Library 10-23-25.txt`
-     - `MIRA/RJM MIRA_Reasoning Architecture.txt`
-     - `MIRA/MIRA_Developer Integration.txt`
-     - `RJM API PACKAGE   (10.10.25)/RJM API Overview.txt`
-     - `RJM API PACKAGE   (10.10.25)/RJM API Integration Guide.txt`
-   - Split into chunks and embed with OpenAI embeddings.
-   - Upsert into Pinecone index (`PINECONE_INDEX_NAME`, default `rjm-mira-docs`), tracking hashes in `rjm_documents`.
-
-2. **Retrieval**
-   - For each `/v1/rjm/generate` request:
-     - Build a query string from brief + brand + category + filters.
-     - Embed the query.
-     - Query Pinecone for top-k relevant RJM chunks.
-
-3. **Generation (MIRA-style)**
-   - Compose a system message that encodes:
-     - MIRA reasoning steps (brief → phyla → personas → identifiers → narrative → activation).
-     - Packaging Logic formatting rules.
-   - Send a chat completion request to `OPENAI_MODEL` with:
-     - System message (MIRA behavior + schema instructions).
-     - User message (RJM context snippets + brand request).
-   - Expect **strict JSON** with keys:
-     - `header`, `key_identifiers`, `personas`, `persona_insights`, `demos`, `activation_plan`.
-   - Parse JSON into `ProgramJSON` (with fallbacks if parsing fails).
-   - Compose a human-readable `program_text` that mirrors Packaging Logic.
+**Response:**
+```json
+{
+  "program_json": {
+    "header": "L'Oréal | Persona Framework",
+    "advertising_category": "Luxury & Fashion",
+    "key_identifiers": ["...", "...", "...", "..."],
+    "personas": [...],
+    "generational_segments": ["Gen Z–...", "Millennial–...", "Gen X–...", "Boomer–..."],
+    "persona_insights": ["...", "..."],
+    "demos": {"core": "Adults 25-54", "secondary": "Adults 18+", "broad_demo": "Adults 18-64"},
+    "activation_plan": [...]
+  },
+  "program_text": "..."
+}
+```
 
 ---
 
-## Configuration summary
+## Key Features
 
-Key environment variables (see `app/config/settings.py`):
+### 1. Category-First Selection
+The system infers the advertising category from the brand name and brief, then selects personas from the category-mapped pool first.
 
-- **OpenAI**
-  - `OPENAI_API_KEY`
-  - `OPENAI_MODEL` (e.g., `gpt-4o-mini`)
-  - `OPENAI_EMBEDDING_MODEL` (e.g., `text-embedding-3-small`)
+### 2. Dual-Anchor Support
+Brands that span multiple categories (e.g., L'Oréal = CPG + Luxury & Fashion) receive dual anchors:
+- `RJM CPG`
+- `RJM Luxury & Fashion`
 
-- **Pinecone**
-  - `PINECONE_API_KEY`
-  - `PINECONE_INDEX_NAME` (default `rjm-mira-docs`)
-  - `PINECONE_REGION` (default `us-east-1`)
+### 3. Phylum Diversity
+Personas are diversified across phyla to ensure cultural dimensionality:
+- Minimum 3 distinct phyla
+- Maximum 30% dominance from any single phylum
 
-- **RJM docs**
-  - `RJM_DOCS_DIR` – base directory containing RJM `.txt` files (default `rjm_docs`).
+### 4. Generational Segments (32 total)
+Every program includes 4 generational anchors, one from each cohort:
+- **Gen Z (8):** Cloud Life, Fast Culture, Main Character Energy, SelfTok, Gossip, Alt Hustle, Cause Identity, Prompted
+- **Millennial (8):** Aware, Foodstagram, Growth-Minded, Spin Juice, Startup Nation, Throwback, Wanderlust, Vibing
+- **Gen X (8):** "Brand" New World, Crossfaded, Free World, Isn't It Ironic?, Latchkey Life, Mixtape Society, Pop Language, Teen Spirit
+- **Boomer (8):** Ambition Age, Camelot, Counterculture, The Living Room, Marching Forward, Shifting Roles, Suburbia, Universal Soundtrack
 
-- **Database**
-  - `DATABASE_URL` – optional; if omitted, falls back to `sqlite+aiosqlite:///./local.db`.
+### 5. Multicultural Expressions (30 total)
+Applied when the brief targets specific cultural lineages:
+- Black American (5)
+- Latino / Hispanic (5)
+- AAPI (5)
+- South Asian / Desi (5)
+- MENA (5)
+- Hybrid / Global (5)
+
+### 6. Local Culture DMA Segments (125 markets)
+Applied only when the brief explicitly targets DMA/state/city geography.
+
+### 7. Rotation Logic
+In-memory tracking prevents repetition of:
+- Core personas (120 item window)
+- Generational segments (40 item window)
 
 ---
 
-## Notes / TODOs for refinement
+## Output Format
 
-- Tighten prompt and persona selection so all personas are strictly from the RJM canon (Phylum Index + Narrative Library).
-- Add automated tests for:
-  - JSON schema compliance.
-  - Persona count bounds (6–20).
-  - Section order in `program_text`.
-- Expand sync to support parallel chunking and configurable namespaces.
+### Section Order (Emoji Law)
+1. 🔑 Key Identifiers (4-5 bullets)
+2. ✨ Persona Highlights (4 lines: 3 core + 1 generational)
+3. 📊 Persona Insights (2 bullets with percentage bands)
+4. 👥 Demos (Core + Secondary + optional Broad)
+5. 📍 Persona Portfolio (~20 entries)
+6. 🧭 Activation Plan (4 canonical bullets)
+7. 📍 Local Strategy (optional, DMA briefs only)
+8. 🌍 Multicultural Layer (optional, when detected)
 
+### Persona Portfolio Structure
+```
+[15 Core Personas] · [1-2 Category Anchors] · [4 Generational Segments]
+```
 
+### Persona Insights Format
+- High band: 33-42%
+- Low band: 21-32%
+- Minimum 5 points separation
+- Persona nickname in quotes at end
+
+---
+
+## Environment Variables
+
+```bash
+# Required
+OPENAI_API_KEY=sk-...
+PINECONE_API_KEY=...
+PINECONE_INDEX_NAME=rjm-docs
+
+# Optional
+OPENAI_MODEL=gpt-4o
+OPENAI_TEMPERATURE=0.7
+DATABASE_URL=sqlite+aiosqlite:///./local.db
+```
+
+---
+
+## Dual-Anchor Brands
+
+The following brands automatically receive dual anchors:
+
+| Brand | Categories |
+|-------|------------|
+| L'Oréal | CPG + Luxury & Fashion |
+| Estée Lauder | CPG + Luxury & Fashion |
+| Nike | Sports & Fitness + Retail & E-Commerce |
+| Adidas | Sports & Fitness + Retail & E-Commerce |
+| Apple | Tech & Wireless + Luxury & Fashion |
+| Amazon | Retail & E-Commerce + Tech & Wireless |
+| Disney | Entertainment + Travel & Hospitality |
+| Marriott | Travel & Hospitality + Luxury & Fashion |
+
+---
+
+## Version History
+
+- **11.26.25** - RJM Ingredient Canon integration
+  - Consolidated all ingredient data into single source
+  - Added 32 generational segments with descriptions
+  - Added 30 multicultural expressions
+  - Added 125 DMA local culture segments
+  - Implemented dual-anchor logic for multi-category brands
+  - Fixed L'Oréal dual anchor (CPG + Luxury & Fashion)
