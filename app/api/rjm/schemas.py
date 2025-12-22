@@ -1,25 +1,8 @@
-"""Request and response schemas for RJM / MIRA persona program generation."""
+"""Request and response schemas for RJM / MIRA persona program generation and chat."""
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
-
-
-class RJMFilters(BaseModel):
-    """Optional RJM filters that modify the persona program."""
-
-    local_culture: bool = Field(
-        default=False,
-        description="If true, include local cultural segments (DMA-based).",
-    )
-    generational: bool = Field(
-        default=False,
-        description="If true, include generational cultural segments.",
-    )
-    multicultural: bool = Field(
-        default=False,
-        description="If true, include multicultural segments.",
-    )
 
 
 class GenerateProgramRequest(BaseModel):
@@ -35,34 +18,12 @@ class GenerateProgramRequest(BaseModel):
         min_length=1,
         description="Advertiser or client name requesting a persona program.",
     )
-    category: str = Field(
-        ...,
-        min_length=1,
-        description="Advertising category (e.g., QSR, Auto, Finance, Retail).",
-    )
-    personas_requested: int = Field(
-        default=12,
-        ge=6,
-        le=20,
-        description="Desired number of personas in the package (6–20).",
-    )
-    filters: RJMFilters = Field(
-        default_factory=RJMFilters,
-        description="Optional additive modules (Local, Generational, Multicultural).",
-    )
 
     model_config = {
         "json_schema_extra": {
             "example": {
-                "brief": "QSR brand focused on family value meals and neighborhood gatherings.",
-                "brand_name": "Example QSR",
-                "category": "QSR",
-                "personas_requested": 12,
-                "filters": {
-                    "local_culture": True,
-                    "generational": True,
-                    "multicultural": False,
-                },
+                "brief": "Beauty brand focused on ritual, self-expression, and confidence.",
+                "brand_name": "Example Brand",
             }
         }
     }
@@ -78,6 +39,20 @@ class Persona(BaseModel):
     phylum: Optional[str] = Field(
         default=None, description="Cultural lane / phylum this persona belongs to."
     )
+    highlight: Optional[str] = Field(
+        default=None,
+        description="7–12 word strategist-style highlight line for this persona.",
+    )
+
+
+class GenerationalSegment(BaseModel):
+    """Generational segment with optional highlight."""
+
+    name: str = Field(..., description="Generational segment name (e.g., Gen Z–SelfTok).")
+    highlight: Optional[str] = Field(
+        default=None,
+        description="7–12 word strategist-style highlight line for this generation.",
+    )
 
 
 class ProgramJSON(BaseModel):
@@ -86,6 +61,10 @@ class ProgramJSON(BaseModel):
     header: str = Field(
         ...,
         description="Program title in the form '[Brand] | Persona Framework'.",
+    )
+    advertising_category: Optional[str] = Field(
+        default=None,
+        description="Detected RJM advertising category (e.g., QSR, Retail & E-Commerce).",
     )
     key_identifiers: List[str] = Field(
         ...,
@@ -97,15 +76,20 @@ class ProgramJSON(BaseModel):
         ...,
         min_length=6,
         max_length=20,
-        description="List of personas included in the program.",
+        description="List of core personas included in the program (not including generational segments).",
+    )
+    generational_segments: List[GenerationalSegment] = Field(
+        default_factory=list,
+        max_length=4,
+        description="4 generational segments (one per cohort: Gen Z, Millennial, Gen X, Boomer) with highlights.",
     )
     persona_insights: List[str] = Field(
         default_factory=list,
         description="Up to 3 persona insight bullets.",
     )
     demos: Dict[str, Optional[str]] = Field(
-        default_factory=lambda: {"core": None, "secondary": None},
-        description="Core and secondary demo splits.",
+        default_factory=lambda: {"core": None, "secondary": None, "broad_demo": None},
+        description="Demo splits (core, secondary, optional broad coverage).",
     )
     activation_plan: List[str] = Field(
         default_factory=list,
@@ -129,6 +113,7 @@ class GenerateProgramResponse(BaseModel):
             "example": {
                 "program_json": {
                     "header": "Example QSR | Persona Framework",
+                    "advertising_category": "QSR",
                     "key_identifiers": [
                         "Family & Celebration",
                         "Neighborhood Rituals",
@@ -153,6 +138,7 @@ class GenerateProgramResponse(BaseModel):
                     "demos": {
                         "core": "Adults 25–54",
                         "secondary": "Adults 18+",
+                        "broad_demo": "Adults 18–64",
                     },
                     "activation_plan": [
                         "Set up campaign as a direct package or PMP package.",
@@ -192,6 +178,121 @@ class SyncResponse(BaseModel):
 
     summary: SyncSummary
     details: List[DocumentSyncDetail] = Field(default_factory=list)
+
+
+class ChatMessage(BaseModel):
+    """Single chat message in a MIRA conversational session."""
+
+    role: Literal["user", "assistant"] = Field(
+        ...,
+        description="Message role. System behavior is governed by the behavioral engine, not this field.",
+    )
+    content: str = Field(..., min_length=1, description="Message text content.")
+
+
+class MiraChatRequest(BaseModel):
+    """Request schema for POST /v1/rjm/chat."""
+
+    messages: List[ChatMessage] = Field(
+        ...,
+        min_length=1,
+        description="Full message history for this turn (at minimum, the latest user message).",
+    )
+    state: Optional[str] = Field(
+        default=None,
+        description=(
+            "Current behavioral state id (e.g., STATE_GREETING, STATE_INPUT). "
+            "If omitted, the engine assumes a fresh GREETING entry."
+        ),
+    )
+    session_id: Optional[str] = Field(
+        default=None,
+        description="Opaque session identifier returned by the server. Send it back each turn for memory.",
+    )
+    brand_name: Optional[str] = Field(
+        default=None,
+        description=(
+            "Optional explicit brand name. Required once moving into program generation / reasoning."
+        ),
+    )
+    brief: Optional[str] = Field(
+        default=None,
+        description=(
+            "Optional explicit campaign brief. Required once moving into program generation / reasoning."
+        ),
+    )
+
+
+class MiraChatResponse(BaseModel):
+    """Response schema for a single MIRA chat turn."""
+
+    reply: str = Field(
+        ...,
+        description="MIRA's strategist-style reply text, with guiding-move behavior applied.",
+    )
+    state: str = Field(
+        ...,
+        description="Next behavioral state id that the client should send back on the next turn.",
+    )
+    session_id: Optional[str] = Field(
+        default=None,
+        description="Opaque session identifier to persist memory server-side.",
+    )
+    # Optional debug hook to help local development; not for end users.
+    debug_state_was: Optional[str] = Field(
+        default=None,
+        description="Previous state id used to compute this reply (for debugging / logging).",
+    )
+    # Optional generation data for saving persona programs
+    generation_data: Optional[Dict] = Field(
+        default=None,
+        description="Generated persona program data if a program was generated in this turn.",
+    )
+
+
+class TranscriptionResponse(BaseModel):
+    """Response schema for audio transcription."""
+
+    text: str = Field(
+        ...,
+        description="Transcribed text from the audio input.",
+    )
+    duration_seconds: Optional[float] = Field(
+        default=None,
+        description="Duration of the processed audio in seconds.",
+    )
+
+
+class PersonaGenerationResponse(BaseModel):
+    """Response schema for a saved persona generation."""
+
+    id: str = Field(..., description="Unique identifier for the generation")
+    brand_name: str = Field(..., description="Brand name for the program")
+    brief: str = Field(..., description="Campaign brief")
+    program_text: str = Field(..., description="Human-readable formatted program text")
+    program_json: Optional[Dict] = Field(
+        default=None,
+        description="Structured program data as JSON"
+    )
+    advertising_category: Optional[str] = Field(
+        default=None,
+        description="Detected advertising category"
+    )
+    source: str = Field(
+        default="generator",
+        description="Source of generation: 'generator' or 'chat'"
+    )
+    created_at: str = Field(..., description="ISO timestamp of when the program was generated")
+
+
+class PersonaGenerationListResponse(BaseModel):
+    """Response schema for listing persona generations."""
+
+    generations: List[PersonaGenerationResponse] = Field(
+        default_factory=list,
+        description="List of persona generations"
+    )
+    total: int = Field(default=0, description="Total number of generations")
 
 
 

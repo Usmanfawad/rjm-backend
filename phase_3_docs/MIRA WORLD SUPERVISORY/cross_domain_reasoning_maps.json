@@ -1,0 +1,90 @@
+{
+  "module": "cross_domain_reasoning_maps",
+  "version": "1.0",
+  "purpose": "Encode the multi-axis reasoning matrices: Identity \u00d7 Category, Behavior \u00d7 Tension, Category \u00d7 Funnel, Category \u00d7 Channel, Motivational Driver Map, Emotional Reward Matrix.",
+  "matrices": {
+    "identity_category_map": {
+      "identity_signals": [
+        "aspirational",
+        "utilitarian",
+        "status",
+        "belonging"
+      ],
+      "category_alignment": {
+        "aspirational": [
+          "auto",
+          "luxury",
+          "beauty"
+        ],
+        "utilitarian": [
+          "CPG",
+          "groceries",
+          "household"
+        ],
+        "status": [
+          "luxury",
+          "fashion"
+        ],
+        "belonging": [
+          "QSR",
+          "entertainment",
+          "retail"
+        ]
+      }
+    },
+    "behavior_tension_map": {
+      "uncertainty": [
+        "searching",
+        "comparison"
+      ],
+      "constraint": [
+        "price-sensitivity",
+        "utility seeking"
+      ],
+      "aspiration": [
+        "identity display",
+        "exploration"
+      ],
+      "escape": [
+        "entertainment",
+        "impulse"
+      ],
+      "reinvention": [
+        "new-brand-trial"
+      ]
+    },
+    "category_funnel_map": {
+      "auto": "upper \u2192 mid",
+      "beauty": "upper \u2192 mid",
+      "finance": "mid \u2192 lower",
+      "qsr": "lower",
+      "retail": "mid"
+    },
+    "category_channel_map": {
+      "auto": [
+        "CTV",
+        "YouTube"
+      ],
+      "beauty": [
+        "TikTok",
+        "Instagram"
+      ],
+      "finance": [
+        "search",
+        "YouTube"
+      ],
+      "qsr": [
+        "retail_media",
+        "OLV"
+      ],
+      "retail": [
+        "search",
+        "social"
+      ]
+    }
+  },
+  "outputs": [
+    "reasoning_matrix_bundle",
+    "triangulation_pattern"
+  ]
+}

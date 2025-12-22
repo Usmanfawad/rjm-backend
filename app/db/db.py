@@ -86,7 +86,9 @@ async def init_db() -> None:
             user,
             user_connector,
             audit_log,
+            test_item,
             rjm_document,
+            persona_generation,
         )
         
         # Create all tables

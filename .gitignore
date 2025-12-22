@@ -167,3 +167,39 @@ Thumbs.db
 local.db
 *.db-journal
 
+docs/
+# ════════════════════════════════════════════════════════════════════════════
+# PHASE 3 DOCS - Unused reference files (not loaded by codebase)
+# ════════════════════════════════════════════════════════════════════════════
+
+# Root-level reference docs (text specs - not used, JSON files ARE used)
+/phase_3_docs/MIRA BEHAVIORAL SPEC — MASTER 12-9-25.txt
+/phase_3_docs/MIRA ACTIVATION LAYER SPEC.txt
+/phase_3_docs/MIRA REASONING SPEC MASTER.txt
+/phase_3_docs/MIRA EXPERIENCE MASTER.txt
+/phase_3_docs/MIRA WORLD MODEL JSON BLUEPRINT 11.txt
+/phase_3_docs/mira_reasoning_planning_prompts.txt
+/phase_3_docs/mira_reasoning_decision_trees.txt
+/phase_3_docs/mira_reasoning_json_part1.txt
+/phase_3_docs/mira_experience_json_v1.txt
+
+# Deliverables - unused markdown docs (only 3_REASONING_STATE_MACHINE.json is used)
+/phase_3_docs/deliverables/1_SYSTEM_PROMPT_DRAFT.md
+/phase_3_docs/deliverables/2_CONVERSATION_FLOW_MODEL.md
+/phase_3_docs/deliverables/4_ACTIVATION_MAPPING.md
+
+# MIRA WORLD SUPERVISORY - unused JSON files
+/phase_3_docs/MIRA WORLD SUPERVISORY/cultural_drift_engine.json
+/phase_3_docs/MIRA WORLD SUPERVISORY/motivational_driver_crossmap.json
+/phase_3_docs/MIRA WORLD SUPERVISORY/ontology_index.json
+/phase_3_docs/MIRA WORLD SUPERVISORY/persona_interference_matrix.json
+/phase_3_docs/MIRA WORLD SUPERVISORY/temporal_dynamics_engine.json
+/phase_3_docs/MIRA WORLD SUPERVISORY/universal_planning_law.json
+
+# MIRA WORLD DOMAIN - unused JSON files
+/phase_3_docs/MIRA WORLD DOMAIN/category_domain.json
+/phase_3_docs/MIRA WORLD DOMAIN/identity_domain.json
+/phase_3_docs/MIRA WORLD DOMAIN/market_reality_domain.json
+/phase_3_docs/MIRA WORLD DOMAIN/meaning_domain.json
+/phase_3_docs/MIRA WORLD DOMAIN/world_model_advertising_domain.json
+/phase_3_docs/MIRA WORLD DOMAIN/world_model_category_domain.json

@@ -1,0 +1,42 @@
+{
+  "module": "activation_flighting",
+  "version": "1.0",
+  "purpose": "Define flighting patterns and when to use them.",
+  "cadences": {
+    "linear": {
+      "description": "Even delivery across the full flight.",
+      "recommended_for": [
+        "steady_flights",
+        "consistent_awareness"
+      ]
+    },
+    "burst": {
+      "description": "Heavy delivery in first 1\u20132 weeks.",
+      "recommended_for": [
+        "quick_awareness",
+        "cultural_surge",
+        "launch_phase"
+      ]
+    },
+    "pulsed": {
+      "description": "On/off rhythm for long or constrained-budget campaigns.",
+      "recommended_for": [
+        "budget_constrained",
+        "long_duration"
+      ]
+    }
+  },
+  "selection_logic": {
+    "inputs": [
+      "category",
+      "funnel",
+      "budget",
+      "persona_motivations"
+    ],
+    "rules": [
+      "Emotional categories \u2192 prefer burst or linear",
+      "Limited budget \u2192 prefer pulsed",
+      "Mid-funnel \u2192 prefer balanced pacing + linear_flighting"
+    ]
+  }
+}

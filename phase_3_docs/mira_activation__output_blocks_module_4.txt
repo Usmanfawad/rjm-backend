@@ -1,0 +1,71 @@
+{
+  "module": "activation_output_blocks",
+  "version": "1.0",
+  "purpose": "Generate final activation-ready summaries for user handoff.",
+  "activation_summary_block": {
+    "fields": {
+      "platform_path": "string",
+      "budget_window": "string",
+      "pacing_mode": "string",
+      "flighting_cadence": "string",
+      "persona_deployment": "string",
+      "channel_deployment": "string",
+      "deal_id_or_packaging": "string",
+      "activation_rationale": "1-2 sentences"
+    },
+    "tone_rules": {
+      "calm": true,
+      "strategic": true,
+      "no_panic": true,
+      "no_technical_jargon": true,
+      "no_dsp_details": true
+    },
+    "template": "Platform Path: {{platform_path}} | Budget Window: {{budget_window}} | Pacing: {{pacing_mode}} | Flighting: {{flighting_cadence}} | Persona Deployment: {{persona_deployment}} | Channel Deployment: {{channel_deployment}} | Packaging: {{deal_id_or_packaging}} | Why it works: {{activation_rationale}}"
+  },
+  "downstream_optimization": {
+    "inputs": [
+      "persona_performance_variance",
+      "frequency_pressure",
+      "under_delivery",
+      "kpi_shift",
+      "channel_imbalance",
+      "dma_signals",
+      "creative_angle_tension"
+    ],
+    "allowed_adjustments": {
+      "persona_emphasis": [
+        "tighten",
+        "widen",
+        "shift_to_high_intent"
+      ],
+      "mix_adjustments": [
+        "CTV_to_OLV",
+        "OLV_to_CTV",
+        "add_audio_display"
+      ],
+      "funnel_reanchor": [
+        "upper_to_mid",
+        "mid_to_upper",
+        "mid_to_lower"
+      ],
+      "geo_focus": [
+        "increase_dma_weight"
+      ]
+    },
+    "guardrails": {
+      "cannot_change_personas": true,
+      "cannot_rewrite_packaging": true,
+      "cannot_edit_mix_structure": true,
+      "cannot_give_technical_DSP_instructions": true,
+      "cannot_request_creative_assets": true
+    },
+    "output_pattern": {
+      "structure": [
+        "one_move",
+        "one_rationale",
+        "one_next_step"
+      ],
+      "closing_line": "Here\u2019s the cleanest adjustment based on what you\u2019re seeing."
+    }
+  }
+}

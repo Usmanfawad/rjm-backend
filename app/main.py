@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from app.config.logger import app_logger, log_request_start, log_request_end, log_request_error
 from app.db.db import init_db, close_db, ping_database
 from app.db.seed import ensure_seed_admin_user
+from app.api.test_items import router as test_items_router
 from app.api.auth.router import router as auth_router
 from app.api.rjm.router import router as rjm_router
 
@@ -176,6 +177,7 @@ async def health_db():
 
 
 # Include API routers
+app.include_router(test_items_router)
 app.include_router(auth_router)
 app.include_router(rjm_router)
 

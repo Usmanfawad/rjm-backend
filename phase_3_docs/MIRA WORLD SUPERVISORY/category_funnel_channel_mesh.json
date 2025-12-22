@@ -1,0 +1,53 @@
+{
+  "module": "category_funnel_channel_mesh",
+  "version": "1.0",
+  "purpose": "Define the mesh that links category \u2192 funnel \u2192 channel \u2192 activation. This is required for deterministic reasoning and activation routing.",
+  "mesh_rules": {
+    "upper_funnel_categories": {
+      "channels": [
+        "video",
+        "CTV",
+        "YouTube"
+      ],
+      "activation": "identity expansion"
+    },
+    "mid_funnel_categories": {
+      "channels": [
+        "OLV",
+        "social video",
+        "search"
+      ],
+      "activation": "meaning reinforcement"
+    },
+    "lower_funnel_categories": {
+      "channels": [
+        "retail_media",
+        "search",
+        "display"
+      ],
+      "activation": "utility and conversion"
+    }
+  },
+  "identity_mapping": {
+    "identity_forward_categories": [
+      "auto",
+      "beauty",
+      "luxury"
+    ],
+    "utility_forward_categories": [
+      "CPG",
+      "retail",
+      "household cleaners"
+    ],
+    "emotion_forward_categories": [
+      "travel",
+      "fitness",
+      "entertainment"
+    ]
+  },
+  "outputs": [
+    "recommended_funnel",
+    "recommended_channels",
+    "recommended_activation"
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "module": "activation_budget_pacing",
+  "version": "1.0",
+  "purpose": "Define budget windows and pacing modes for deployment.",
+  "budget_windows": {
+    "single": {
+      "use_when": [
+        "steady_awareness",
+        "longer_flights",
+        "consistent_delivery_needed"
+      ],
+      "implications": {
+        "persona_weighting": "balanced",
+        "mix_stability": "high"
+      }
+    },
+    "split": {
+      "use_when": [
+        "test_vs_control",
+        "seasonal_phases",
+        "dual-objective_campaigns"
+      ],
+      "implications": {
+        "persona_weighting": "phase_specific",
+        "mix_stability": "medium"
+      }
+    },
+    "adaptive": {
+      "use_when": [
+        "test_learn_scale",
+        "performance_uncertain"
+      ],
+      "implications": {
+        "persona_weighting": "dynamic_emphasis",
+        "mix_stability": "variable"
+      }
+    }
+  },
+  "pacing_modes": {
+    "standard": {
+      "description": "Even daily pacing. Default for most brand campaigns.",
+      "use_when": [
+        "awareness",
+        "balanced_funnel"
+      ]
+    },
+    "balanced": {
+      "description": "Soft acceleration in first 30\u201340%.",
+      "use_when": [
+        "shorter_flights",
+        "mid_funnel"
+      ]
+    },
+    "accelerated": {
+      "description": "Front-loaded for urgency or testing.",
+      "use_when": [
+        "tight_timeline",
+        "learning_phase"
+      ]
+    }
+  }
+}
