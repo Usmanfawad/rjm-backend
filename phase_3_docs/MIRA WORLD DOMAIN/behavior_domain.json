@@ -1,0 +1,162 @@
+{
+  "module": "behavior_domain",
+  "version": "1.0",
+  "purpose": "Define how behavior emerges from identity, interacts with environmental forces, forms meaning, and shapes category engagement. Behavior is the visible expression of internal identity forces and the precursor to meaning-making.",
+  "behavior_components": {
+    "observable_behaviors": {
+      "definition": "Externally visible actions that express internal identity states.",
+      "types": [
+        "purchase_behavior",
+        "search_behavior",
+        "media_behavior",
+        "platform_behavior",
+        "ritual_behavior",
+        "habit_loops",
+        "exploration_vs_repetition",
+        "identity_display_actions"
+      ]
+    },
+    "behavior_drivers": {
+      "definition": "The internal identity pressures that generate observable behavior.",
+      "drivers": [
+        "identity_signal_needs",
+        "tension_state",
+        "motivational_orientation",
+        "cultural_membership_pressure",
+        "status_seeking",
+        "escape_or_relief",
+        "self_concept_reinforcement"
+      ]
+    },
+    "behavior_modes": {
+      "definition": "Behavior shifts depending on the user's situational identity state.",
+      "modes": [
+        "task_mode",
+        "exploration_mode",
+        "validation_mode",
+        "escape_mode",
+        "social_mode",
+        "utility_mode",
+        "identity_performance_mode",
+        "ritual_mode"
+      ]
+    }
+  },
+  "identity_to_behavior_rules": {
+    "principles": [
+      "Identity determines baseline behavior patterns.",
+      "Identity sets behavioral sensitivity to environmental cues.",
+      "Identity sets the meaning-making threshold of each behavior.",
+      "Identity determines which behaviors are expressive vs functional.",
+      "Identity determines how quickly behavior recombines into new meaning."
+    ],
+    "notes": "MIRA always interprets behavior as an expression of identity, not the other way around."
+  },
+  "tension_to_behavior_mapping": {
+    "definition": "Tension states activate specific behavior patterns. Tension is the bridge between identity and behavior.",
+    "tension_driven_behaviors": [
+      {
+        "tension": "uncertainty",
+        "behaviors": [
+          "searching",
+          "comparison",
+          "reassurance-seeking"
+        ]
+      },
+      {
+        "tension": "constraint",
+        "behaviors": [
+          "price-sensitivity",
+          "utility-optimization"
+        ]
+      },
+      {
+        "tension": "aspiration",
+        "behaviors": [
+          "identity-signaling",
+          "brand-affiliation"
+        ]
+      },
+      {
+        "tension": "escape",
+        "behaviors": [
+          "entertainment-seeking",
+          "impulse buying"
+        ]
+      },
+      {
+        "tension": "reinvention",
+        "behaviors": [
+          "category-exploration",
+          "new-brand-trial"
+        ]
+      }
+    ]
+  },
+  "behavior_constraints": {
+    "rules": [
+      "Behavior cannot contradict the stable identity without producing tension.",
+      "Behavior does not change meaning unless repeated or emotionally loaded.",
+      "Behavior must be interpreted in temporal context (AM vs PM persona).",
+      "Behavior must be interpreted in geographic context (DMA \u2192 persona shift).",
+      "Behavior must be interpreted in platform context (TikTok \u2260 Amazon)."
+    ]
+  },
+  "behavior_context_engine": {
+    "definition": "Environmental forces shape how behavior manifests, interpreted using Part II of the World Model.",
+    "market_forces": [
+      "4P_interpretation",
+      "platform_distortion",
+      "cultural_redline_effects",
+      "membership_vs_fulfillment_context",
+      "gatekeeper_algorithms"
+    ],
+    "rules": [
+      "Behavior must always be cross-referenced with market reality.",
+      "Behavior cannot be interpreted without 4P context.",
+      "Behavior that contradicts market availability triggers tension."
+    ]
+  },
+  "persona_switching_behavior_logic": {
+    "definition": "Behavior shifts when personas switch, based on geography, role, digital context, and energy state.",
+    "switch_dimensions": [
+      "geographic_behavior_shift",
+      "role_behavior_shift",
+      "energy_state_shift",
+      "digital_environment_shift",
+      "temporal_shift"
+    ],
+    "notes": "Behavior is the primary observable indicator of persona context-switching."
+  },
+  "meaning_generation_rules": {
+    "principles": [
+      "Behavior generates meaning only when emotionally loaded.",
+      "Repeated behaviors produce stable meaning.",
+      "Unexpected behaviors create new identity interpretations.",
+      "Behavior in high-emotion contexts generates faster meaning.",
+      "Behavior interpreted through cultural context accelerates meaning."
+    ],
+    "outputs": [
+      "meaning_signal",
+      "category_affinity",
+      "identity_reinforcement",
+      "tension_relief_or_amplification"
+    ]
+  },
+  "behavior_inheritance_rules": {
+    "behavior_informs": [
+      "meaning_resonance",
+      "category_relevance",
+      "channel_bias",
+      "platform_reasoning",
+      "persona_weighting",
+      "creative_alignment",
+      "funnel_placement"
+    ],
+    "behavior_does_not_inherit": [
+      "platform_defaults",
+      "generic_audience_assumptions",
+      "legacy demographic interpretations"
+    ]
+  }
+}

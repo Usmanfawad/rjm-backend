@@ -1,0 +1,141 @@
+{
+  "module": "activation_platform_logic",
+  "version": "1.0",
+  "purpose": "Define platform routing logic for MIRA\u2019s Activation Layer, including platform families, permission rules, decision tree, and strategist-facing output.",
+  "platform_families": {
+    "direct_rjm": {
+      "label": "Direct via RJM",
+      "internal_name": "Ribeye",
+      "rules": {
+        "always_available": true,
+        "requires_permission": false,
+        "external_reference_allowed": false,
+        "description": "Internal direct path. Fastest activation. Operated directly through RJM\u2019s white-labeled DSP. Used for turnkey, high-urgency, or CTV-first setups requiring simplicity and speed."
+      }
+    },
+    "dsp_programmatic": {
+      "trade_desk": {
+        "direct_integration": true,
+        "via_liveramp": false,
+        "requires_advertiser_id": false,
+        "description": "Primary DSP path. Clean persona layering. Ideal for mixed media campaigns requiring optimization."
+      },
+      "dv360": {
+        "direct_integration": false,
+        "via_liveramp": true,
+        "requires_advertiser_id": false,
+        "description": "Google\u2019s DSP. Personas ingested through LiveRamp. Used for advertisers requiring DV360 workflow."
+      },
+      "yahoo": {
+        "direct_integration": false,
+        "via_liveramp": true,
+        "requires_partner_acceptance": true,
+        "description": "Yahoo DSP requires partner acceptance for syndicated or advertiser-specific provisioning."
+      },
+      "amazon": {
+        "direct_integration": true,
+        "segment_level_permission_varies": true,
+        "description": "Amazon DSP supports direct persona ingestion for media + data. Segment availability varies."
+      },
+      "beeswax": {
+        "via_ribeye_infrastructure": true,
+        "description": "Accessible within Ribeye instances. Used primarily for CTV extension or DSP interoperability."
+      }
+    },
+    "ssp_ctv": {
+      "freewheel": {
+        "via_cadent": true,
+        "description": "Primary CTV supply path. Personas layered via Cadent \u2192 FreeWheel. Used when publisher-level CTV is required."
+      },
+      "magnite": {
+        "direct_integration": false,
+        "via_liveramp": true,
+        "description": "Leading CTV/OTT SSP. Personas ingested through LiveRamp."
+      },
+      "equativ": {
+        "direct_integration": false,
+        "via_liveramp": true,
+        "description": "SSP path for CTV + display. Personas layered through LiveRamp or publisher network ID."
+      }
+    },
+    "social_platforms": {
+      "meta": {
+        "requires_advertiser_seat_id": true,
+        "permissioning_required": true,
+        "description": "Meta requires advertiser-owned seat ID. Personas placed directly into the advertiser\u2019s account."
+      },
+      "tiktok": {
+        "requires_advertiser_seat_id": true,
+        "permissioning_required": true,
+        "description": "TikTok ingestion path similar to Meta. LiveRamp support varies by region and advertiser setup."
+      },
+      "snapchat": {
+        "limited_third_party_ingestion": true,
+        "description": "Snapchat provides restricted support for third-party audiences. Available only in specific configurations."
+      }
+    }
+  },
+  "permission_rules": {
+    "liveramp_is_core": true,
+    "liveramp_description": "All persona distribution flows through LiveRamp except direct TTD ingestion.",
+    "ribeye_closed_pricing": {
+      "rate_cpm": 0.75,
+      "grandfathered": true,
+      "public_reference": false
+    },
+    "ssp_require_network_id": true,
+    "social_requirements": {
+      "advertiser_id_required": true,
+      "platform_contract_may_be_needed": true
+    }
+  },
+  "platform_decision_tree": {
+    "step_1_timeline": {
+      "if_under_48_hours": "direct_rjm",
+      "if_over_48_hours": "proceed"
+    },
+    "step_2_advertiser_constraints": {
+      "requires_dsp_seat": "specific_dsp_path",
+      "no_dsp_requirement": "proceed"
+    },
+    "step_3_channel_priority": {
+      "ctv_first": "ssp_or_dsp",
+      "mixed_media": "dsp_programmatic",
+      "turnkey": "direct_rjm"
+    },
+    "step_4_permissioning": {
+      "platform_requires_advertiser_id": {
+        "if_provided": "path_allowed",
+        "if_missing": "path_removed"
+      },
+      "liveramp_support": {
+        "if_supported": "path_allowed",
+        "if_not_supported": "path_removed"
+      }
+    },
+    "step_5_efficiency_check": {
+      "optimization_needed": "dsp_programmatic",
+      "speed_needed": "direct_rjm"
+    }
+  },
+  "activation_output_format": {
+    "fields": {
+      "platform_path": "string",
+      "platform_rationale": "1-2 sentences",
+      "permissioning_notes": "optional string",
+      "fallback_path": "string (if any)"
+    },
+    "rules": {
+      "tone": "calm_strategic",
+      "no_technical_jargon": true,
+      "no_dsp_ops": true,
+      "no_reference_ribeye_externally": true
+    },
+    "example": {
+      "platform_path": "DV360 (via LiveRamp)",
+      "platform_rationale": "Advertiser requires DV360 workflow; personas available via LiveRamp ingestion.",
+      "permissioning_notes": "No advertiser seat ID required.",
+      "fallback_path": "Direct via RJM"
+    }
+  }
+}

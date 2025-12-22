@@ -1,9 +1,12 @@
 """RJM / MIRA persona program generation endpoints."""
 
+import json
 from datetime import datetime, timezone
-from typing import List, Set
+from typing import List, Optional, Set
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.logger import app_logger
@@ -14,11 +17,19 @@ from app.api.rjm.schemas import (
     SyncResponse,
     SyncSummary,
     Persona,
+    MiraChatRequest,
+    MiraChatResponse,
+    TranscriptionResponse,
+    PersonaGenerationResponse,
+    PersonaGenerationListResponse,
 )
 from app.db.db import get_session
+from app.models.persona_generation import PersonaGeneration
+from app.services.mira_chat import handle_chat_turn
 from app.services.rjm_rag import generate_program_with_rag
 from app.services.rjm_sync import sync_rjm_documents
 from app.utils.responses import SuccessResponse, success_response
+from app.utils.auth import get_current_user_id, require_auth
 from app.services.rjm_ingredient_canon import (
     ALL_GENERATIONAL_NAMES,
     GENERATIONS,
@@ -67,12 +78,14 @@ def _clean_highlight(name: str, highlight: str) -> str:
 
 @router.post(
     "/generate",
-    response_model=GenerateProgramResponse,
+    response_model=SuccessResponse[GenerateProgramResponse],
     summary="Generate an RJM persona program from a brief",
 )
 async def generate_persona_program(
     request: GenerateProgramRequest,
-) -> GenerateProgramResponse:
+    session: AsyncSession = Depends(get_session),
+    user_id: Optional[str] = Depends(get_current_user_id),
+) -> SuccessResponse[GenerateProgramResponse]:
     """Generate a single RJM-style persona program from a brief.
 
     This is a one-shot generation endpoint (not a chatbot).
@@ -80,6 +93,7 @@ async def generate_persona_program(
     - Runs RAG over RJM docs (Packaging Logic, Phylum Index, Narrative Library, MIRA).
     - Calls OpenAI with a MIRA-style prompt.
     - Enforces schema + formatting to mirror RJM Packaging API / MIRA schema.
+    - Saves the generation to the database if user is authenticated.
     """
     start_time = datetime.now(timezone.utc)
 
@@ -277,9 +291,35 @@ async def generate_persona_program(
 
         program_text = "\n".join(lines)
 
-        return GenerateProgramResponse(
-            program_json=program_json,
-            program_text=program_text,
+        # Save the generation to the database if user is authenticated
+        if user_id:
+            try:
+                persona_gen = PersonaGeneration(
+                    user_id=UUID(user_id),
+                    brand_name=request.brand_name,
+                    brief=request.brief,
+                    program_text=program_text,
+                    program_json=program_json.model_dump_json(),
+                    advertising_category=detected_category,
+                    source="generator",
+                )
+                session.add(persona_gen)
+                await session.commit()
+                app_logger.info(
+                    f"Saved persona generation id={persona_gen.id} for user={user_id}"
+                )
+            except Exception as save_error:
+                app_logger.warning(
+                    f"Failed to save persona generation: {save_error}"
+                )
+                # Don't fail the request if save fails
+
+        return success_response(
+            data=GenerateProgramResponse(
+                program_json=program_json,
+                program_text=program_text,
+            ),
+            message="Persona program generated successfully",
         )
 
     except RuntimeError as exc:
@@ -368,3 +408,291 @@ def _fill_persona_list(
     if len(output) < target:
         append(skip_recent=False)
     return output
+
+
+@router.post(
+    "/chat",
+    response_model=SuccessResponse[MiraChatResponse],
+    summary="MIRA conversational endpoint (behavioral engine + packaging bridge)",
+)
+async def mira_chat_turn(
+    request: MiraChatRequest,
+    session: AsyncSession = Depends(get_session),
+    user_id: Optional[str] = Depends(get_current_user_id),
+) -> SuccessResponse[MiraChatResponse]:
+    """
+    Single-turn MIRA chat endpoint.
+
+    This endpoint:
+    - Uses the Behavioral Engine spec to interpret the current interaction state.
+    - Bridges into the existing Packaging / RAG pipeline when a Persona Program is needed.
+    - Returns a strategist-style reply plus the next behavioral state id.
+    - Saves any generated persona programs to the database if user is authenticated.
+
+    The client is responsible for:
+    - Sending the `state` from the previous response (or omitting it for a fresh GREETING).
+    - Providing `brand_name` and `brief` when ready to generate a program.
+    """
+    result = handle_chat_turn(request, user_id=user_id)
+    
+    # Check if a generation was created and save it
+    if result.generation_data and user_id:
+        try:
+            gen_data = result.generation_data
+            persona_gen = PersonaGeneration(
+                user_id=UUID(user_id),
+                brand_name=gen_data["brand_name"],
+                brief=gen_data["brief"],
+                program_text=gen_data["program_text"],
+                program_json=gen_data["program_json"],
+                advertising_category=gen_data.get("advertising_category"),
+                source="chat",
+                session_id=result.session_id,
+            )
+            session.add(persona_gen)
+            await session.commit()
+            app_logger.info(
+                f"Saved persona generation from chat id={persona_gen.id} for user={user_id}"
+            )
+        except Exception as save_error:
+            app_logger.warning(
+                f"Failed to save persona generation from chat: {save_error}"
+            )
+    
+    return success_response(data=result, message="Chat response generated")
+
+
+# Maximum file size: 25 MB (OpenAI limit)
+MAX_AUDIO_SIZE = 25 * 1024 * 1024
+ALLOWED_AUDIO_TYPES = {
+    "audio/webm",
+    "audio/mp3",
+    "audio/mpeg",
+    "audio/mp4",
+    "audio/m4a",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/ogg",
+    "video/webm",  # Some browsers send webm audio as video/webm
+}
+
+
+@router.post(
+    "/transcribe",
+    response_model=SuccessResponse[TranscriptionResponse],
+    summary="Transcribe audio to text using OpenAI Speech-to-Text",
+)
+async def transcribe_audio_endpoint(
+    file: UploadFile = File(..., description="Audio file to transcribe (mp3, mp4, mpeg, m4a, wav, webm)"),
+    language: Optional[str] = Form(default=None, description="Optional language code (ISO 639-1) e.g., 'en', 'es'"),
+    prompt: Optional[str] = Form(default=None, description="Optional prompt to guide transcription"),
+) -> SuccessResponse[TranscriptionResponse]:
+    """Transcribe an audio file to text.
+
+    This endpoint accepts audio files and returns the transcribed text.
+    Supported formats: mp3, mp4, mpeg, mpga, m4a, wav, webm
+    Maximum file size: 25 MB
+
+    The transcribed text can be edited by the user before sending to the chat.
+    """
+    from app.services.transcription import transcribe_audio
+
+    # Validate content type
+    content_type = file.content_type or ""
+    if content_type not in ALLOWED_AUDIO_TYPES:
+        app_logger.warning(f"Invalid audio content type: {content_type}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid audio format. Supported formats: mp3, mp4, mpeg, m4a, wav, webm. Got: {content_type}",
+        )
+
+    # Read file content
+    try:
+        audio_data = await file.read()
+    except Exception as e:
+        app_logger.error(f"Failed to read uploaded audio file: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to read uploaded audio file.",
+        )
+
+    # Validate file size
+    if len(audio_data) > MAX_AUDIO_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"Audio file too large. Maximum size is 25 MB. Got: {len(audio_data) / (1024 * 1024):.2f} MB",
+        )
+
+    if len(audio_data) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Audio file is empty.",
+        )
+
+    # Get filename for format detection
+    filename = file.filename or "audio.webm"
+
+    try:
+        text = transcribe_audio(
+            audio_data=audio_data,
+            filename=filename,
+            language=language,
+            prompt=prompt,
+        )
+        return success_response(
+            data=TranscriptionResponse(text=text),
+            message="Audio transcribed successfully",
+        )
+    except RuntimeError as e:
+        app_logger.error(f"Transcription service error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e),
+        )
+    except Exception as e:
+        app_logger.error(f"Unexpected transcription error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Transcription failed: {str(e)}",
+        )
+
+
+@router.get(
+    "/generations",
+    response_model=SuccessResponse[PersonaGenerationListResponse],
+    summary="List all persona generations for the current user",
+)
+async def list_persona_generations(
+    session: AsyncSession = Depends(get_session),
+    user_id: str = Depends(require_auth),
+    limit: int = 50,
+    offset: int = 0,
+) -> SuccessResponse[PersonaGenerationListResponse]:
+    """List all persona program generations for the authenticated user.
+
+    Returns a list of generated persona programs ordered by creation date (newest first).
+    """
+    try:
+        # Query generations for this user
+        query = (
+            select(PersonaGeneration)
+            .where(PersonaGeneration.user_id == UUID(user_id))
+            .order_by(PersonaGeneration.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        result = await session.execute(query)
+        generations = result.scalars().all()
+
+        # Count total
+        count_query = (
+            select(PersonaGeneration)
+            .where(PersonaGeneration.user_id == UUID(user_id))
+        )
+        count_result = await session.execute(count_query)
+        total = len(count_result.scalars().all())
+
+        # Convert to response format
+        generation_responses = []
+        for gen in generations:
+            try:
+                program_json_data = json.loads(gen.program_json) if gen.program_json else None
+            except json.JSONDecodeError:
+                program_json_data = None
+
+            generation_responses.append(
+                PersonaGenerationResponse(
+                    id=str(gen.id),
+                    brand_name=gen.brand_name,
+                    brief=gen.brief,
+                    program_text=gen.program_text,
+                    program_json=program_json_data,
+                    advertising_category=gen.advertising_category,
+                    source=gen.source,
+                    created_at=gen.created_at.isoformat(),
+                )
+            )
+
+        return success_response(
+            data=PersonaGenerationListResponse(
+                generations=generation_responses,
+                total=total,
+            ),
+            message=f"Found {total} persona generations",
+        )
+
+    except Exception as e:
+        app_logger.error(f"Failed to list persona generations: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list persona generations: {str(e)}",
+        )
+
+
+@router.get(
+    "/generations/{generation_id}",
+    response_model=SuccessResponse[PersonaGenerationResponse],
+    summary="Get a specific persona generation by ID",
+)
+async def get_persona_generation(
+    generation_id: str,
+    session: AsyncSession = Depends(get_session),
+    user_id: str = Depends(require_auth),
+) -> SuccessResponse[PersonaGenerationResponse]:
+    """Get a specific persona program generation by ID.
+
+    Only returns the generation if it belongs to the authenticated user.
+    """
+    try:
+        gen_uuid = UUID(generation_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid generation ID format",
+        )
+
+    try:
+        query = (
+            select(PersonaGeneration)
+            .where(
+                PersonaGeneration.id == gen_uuid,
+                PersonaGeneration.user_id == UUID(user_id),
+            )
+        )
+        result = await session.execute(query)
+        gen = result.scalar_one_or_none()
+
+        if not gen:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Persona generation not found",
+            )
+
+        try:
+            program_json_data = json.loads(gen.program_json) if gen.program_json else None
+        except json.JSONDecodeError:
+            program_json_data = None
+
+        return success_response(
+            data=PersonaGenerationResponse(
+                id=str(gen.id),
+                brand_name=gen.brand_name,
+                brief=gen.brief,
+                program_text=gen.program_text,
+                program_json=program_json_data,
+                advertising_category=gen.advertising_category,
+                source=gen.source,
+                created_at=gen.created_at.isoformat(),
+            ),
+            message="Persona generation retrieved successfully",
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(f"Failed to get persona generation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get persona generation: {str(e)}",
+        )
+

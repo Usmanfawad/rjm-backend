@@ -1,0 +1,59 @@
+{
+  "module": "activation_platform_path",
+  "version": "1.0",
+  "purpose": "Determine RJM Direct vs DSP activation path based on constraints, timeline, objectives, and user preference.",
+  "inputs": {
+    "timeline": "string",
+    "budget": "number",
+    "brand_requires_control": "boolean",
+    "in_house_dsp_seat": "boolean",
+    "platform_preference": "string (optional)"
+  },
+  "path_logic": {
+    "direct_rjm": {
+      "triggers": [
+        "timeline == urgent",
+        "brand_wants_turnkey == true",
+        "simplicity_priority == true",
+        "immediate_activation == true"
+      ],
+      "outputs": {
+        "platform_path": "Direct via RJM",
+        "internal_label": "rjm_direct",
+        "summary": "RJM-managed pacing, QA, and turnkey flighting. Ideal for faster deployment.",
+        "deal_id_required": false
+      }
+    },
+    "dsp_path": {
+      "triggers": [
+        "brand_requires_control == true",
+        "in_house_dsp_seat == true",
+        "optimization_team_present == true",
+        "budget < 50000"
+      ],
+      "outputs": {
+        "platform_path": "DSP",
+        "internal_label": "dsp_programmatic",
+        "summary": "Use DSP seat for control, optimization, and customization.",
+        "deal_id_required": true
+      }
+    },
+    "hybrid_path": {
+      "triggers": [
+        "budget > 100000",
+        "mixed_funnel == true",
+        "category_requires_hybrid == true"
+      ],
+      "outputs": {
+        "platform_path": "Hybrid",
+        "internal_label": "hybrid_direct_dsp",
+        "summary": "Blend Direct + DSP for scale + control.",
+        "deal_id_required": true
+      }
+    }
+  },
+  "pending": {
+    "platform_specific_appendix": "will be added after Rob meeting",
+    "notes": "TikTok, Meta, Amazon, YouTube, CTV partner flows coming in v1.1"
+  }
+}

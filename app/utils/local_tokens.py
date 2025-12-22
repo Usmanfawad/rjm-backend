@@ -1,4 +1,4 @@
-"""Local JWT helpers for dev auth."""
+"""JWT token helpers for authentication."""
 
 from datetime import datetime, timedelta, timezone
 
@@ -8,13 +8,20 @@ from app.config.settings import settings
 
 
 def create_local_token(user_id: str, email: str) -> str:
-    """Create a short-lived JWT for local auth fallback."""
+    """Create a JWT access token.
+
+    Args:
+        user_id: User ID to encode in the token
+        email: User email to encode in the token
+
+    Returns:
+        str: Encoded JWT token
+    """
     now = datetime.now(timezone.utc)
     exp = now + timedelta(seconds=settings.LOCAL_AUTH_TOKEN_EXP_SECONDS)
     payload = {
         "sub": user_id,
         "email": email,
-        "type": "local",
         "exp": exp,
         "iat": now,
     }
@@ -22,17 +29,23 @@ def create_local_token(user_id: str, email: str) -> str:
 
 
 def decode_local_token(token: str) -> dict:
-    """Decode a locally issued JWT."""
+    """Decode and verify a JWT token.
+
+    Args:
+        token: JWT token string
+
+    Returns:
+        dict: Decoded token payload
+
+    Raises:
+        ValueError: If token is invalid or expired
+    """
     try:
         payload = jwt.decode(
             token,
             settings.LOCAL_AUTH_SECRET,
             algorithms=["HS256"],
         )
-        if payload.get("type") != "local":
-            raise JWTError("Invalid token type")
         return payload
     except JWTError as exc:
-        raise ValueError(f"Invalid local token: {exc}") from exc
-
-
+        raise ValueError(f"Invalid token: {exc}") from exc

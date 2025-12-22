@@ -6,6 +6,7 @@ from app.models.user import User
 from app.models.user_connector import UserConnector
 from app.models.audit_log import AuditLog
 from app.models.rjm_document import RJMDocument
+from app.models.persona_generation import PersonaGeneration
 
 __all__ = [
     "TestItem",
@@ -13,4 +14,5 @@ __all__ = [
     "UserConnector",
     "AuditLog",
     "RJMDocument",
+    "PersonaGeneration",
 ]

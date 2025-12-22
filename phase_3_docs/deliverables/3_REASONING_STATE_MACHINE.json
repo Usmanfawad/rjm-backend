@@ -1,0 +1,708 @@
+{
+  "meta": {
+    "name": "MIRA Reasoning State Machine",
+    "version": "1.0",
+    "description": "Complete state machine specification for MIRA's Reasoning Layer. Defines states, triggers, transitions, and decision trees.",
+    "derived_from": "MIRA REASONING SPEC MASTER 11.23.25"
+  },
+
+  "reasoning_loop": {
+    "description": "Every planning decision follows this internal sequence",
+    "steps": [
+      {
+        "step": 1,
+        "name": "understand_constraint",
+        "question": "What boundaries shape this campaign?"
+      },
+      {
+        "step": 2,
+        "name": "define_objective",
+        "question": "What is the real outcome the brand wants?"
+      },
+      {
+        "step": 3,
+        "name": "identify_tension",
+        "question": "What is the emotional/behavioral hinge?"
+      },
+      {
+        "step": 4,
+        "name": "choose_pathway",
+        "question": "What is the smartest execution route?"
+      },
+      {
+        "step": 5,
+        "name": "recommend_action",
+        "question": "What should they do next?"
+      },
+      {
+        "step": 6,
+        "name": "clarify_next_step",
+        "question": "What do they need to provide or decide?"
+      },
+      {
+        "step": 7,
+        "name": "move",
+        "rule": "No stalling. No spirals. Forward momentum only."
+      }
+    ]
+  },
+
+  "minimum_required_inputs": {
+    "description": "Before Reasoning can enter Pre-Activation, these must be present",
+    "required": [
+      "objective",
+      "budget_window",
+      "dsp_vs_direct_selection",
+      "geography",
+      "kpi"
+    ],
+    "behavior_if_missing": "Request one at a time via clarifying questions"
+  },
+
+  "reasoning_states": {
+    "orientation": {
+      "id": "STATE_ORIENTATION",
+      "description": "Determine what the user is actually trying to achieve when the brief is vague or contradictory",
+      "triggers": [
+        "vague_brief",
+        "unclear_objective",
+        "contradictory_goals"
+      ],
+      "inputs": [
+        "user_brief_text",
+        "stated_objective",
+        "category"
+      ],
+      "outputs": {
+        "real_goal": "Clarified core objective",
+        "starting_frame": "Clean strategic frame to begin reasoning"
+      },
+      "fallback_behavior": "Return one clarifying question only when absolutely required",
+      "exit_criteria": "Real objective identified and confirmed",
+      "transitions": {
+        "success": "STATE_CONSTRAINT",
+        "needs_info": "STATE_CLARIFICATION"
+      }
+    },
+
+    "constraint": {
+      "id": "STATE_CONSTRAINT",
+      "description": "Identify operational boundaries before making any strategic decisions",
+      "triggers": [
+        "budget_constraint",
+        "tight_timeline",
+        "platform_lock_in",
+        "limited_assets",
+        "geo_restrictions"
+      ],
+      "inputs": [
+        "budget",
+        "timeline",
+        "platform_preference",
+        "creative_assets",
+        "geography"
+      ],
+      "outputs": {
+        "guardrails": "Defined strategic limitations",
+        "simplified_path": "Reduced decision complexity"
+      },
+      "fallback_behavior": "Highlight the simplest viable plan within constraints",
+      "exit_criteria": "Constraints acknowledged and incorporated",
+      "transitions": {
+        "success": "STATE_FUNNEL",
+        "needs_info": "STATE_CLARIFICATION"
+      }
+    },
+
+    "funnel": {
+      "id": "STATE_FUNNEL",
+      "description": "Assign the campaign to a consumer journey stage based on category, KPI, and behavioral cues",
+      "triggers": [
+        "kpi_provided",
+        "category_provided",
+        "brief_language_suggests_journey_stage"
+      ],
+      "inputs": [
+        "category",
+        "kpi",
+        "objective",
+        "category_tension",
+        "audience_behavior"
+      ],
+      "outputs": {
+        "funnel_stage": "upper | mid | lower",
+        "weighting_logic": "How personas and channels should be weighted",
+        "persona_emphasis_shift": "Adjustment to persona priorities",
+        "generational_weighting": "Gen Z / Millennial / Gen X / Boomer bias"
+      },
+      "canonical_rule": "Funnel is the master variable inside Reasoning. Funnel determines Mix. Mix determines Platform Path.",
+      "rules": {
+        "emotional_categories": "upper_funnel",
+        "commodity_categories": "mid_funnel",
+        "direct_response_goals": "lower_funnel"
+      },
+      "fallback_behavior": "If unclear, default to mid-funnel unless category defines otherwise",
+      "exit_criteria": "Funnel stage locked and justified",
+      "transitions": {
+        "success": "STATE_MIX",
+        "needs_info": "STATE_CLARIFICATION"
+      }
+    },
+
+    "mix": {
+      "id": "STATE_MIX",
+      "description": "Determine the ideal distribution of CTV, OLV, Audio, Display based on funnel + category + persona behavior",
+      "triggers": [
+        "funnel_decision_made",
+        "category_logic_applied",
+        "persona_motivations_known",
+        "creative_angle_known"
+      ],
+      "inputs": [
+        "funnel_stage",
+        "category",
+        "persona_motivations",
+        "creative_angle"
+      ],
+      "outputs": {
+        "recommended_mix": {
+          "CTV": "percentage",
+          "OLV": "percentage",
+          "Audio": "percentage",
+          "Display": "percentage"
+        },
+        "justification": "Why these channels deliver best for the objective"
+      },
+      "creative_angle_effects": {
+        "emotional_storytelling": "Pushes toward CTV weighting",
+        "functional_creative": "Increases OLV/Audio weighting"
+      },
+      "rules": {
+        "upper_funnel": "More CTV",
+        "mid_funnel": "OLV + CTV blend",
+        "lower_funnel": "Audio + Display support"
+      },
+      "category_mix_biases": {
+        "QSR": "CTV-heavy",
+        "Finance": "Display confidence + hybrid video",
+        "Beauty": "Identity-first emotional storytelling blend",
+        "Auto": "Upper + mid blend"
+      },
+      "fallback_behavior": "Default to CTV-first for emotional categories and blended mix for functional ones",
+      "exit_criteria": "Mix aligned with funnel and category logic",
+      "transitions": {
+        "success": "STATE_PLATFORM",
+        "needs_info": "STATE_CLARIFICATION"
+      }
+    },
+
+    "platform": {
+      "id": "STATE_PLATFORM",
+      "description": "Select the best platform path: DSP, Direct (Ribeye), or Hybrid",
+      "triggers": [
+        "budget_window_known",
+        "timeline_urgency_known",
+        "creative_asset_type_known",
+        "scale_requirement_known"
+      ],
+      "inputs": [
+        "budget",
+        "timeline",
+        "creative_assets",
+        "scale_requirement",
+        "control_preference",
+        "geography"
+      ],
+      "outputs": {
+        "platform_path": "DSP | Direct | Hybrid",
+        "rationale": "Why this route is recommended"
+      },
+      "rules": {
+        "urgent_timelines": "Direct (Ribeye)",
+        "creative_flexibility": "DSP",
+        "budget_under_50k": "DSP",
+        "budget_over_100k": "Hybrid recommended"
+      },
+      "dma_routing_rule": {
+        "dma_targeting": "Default = DSP path",
+        "dma_plus_pmp": "Direct optional, but DSP recommended"
+      },
+      "timeline_logic": {
+        "under_48_hours": "Direct via RJM",
+        "over_48_hours": "Proceed to other checks"
+      },
+      "fallback_behavior": "If unclear, default to DSP for control and flexibility",
+      "exit_criteria": "Platform path selected and justified",
+      "transitions": {
+        "success": "STATE_PERFORMANCE",
+        "needs_info": "STATE_CLARIFICATION"
+      }
+    },
+
+    "performance": {
+      "id": "STATE_PERFORMANCE",
+      "description": "Determine whether to prioritize scale, quality, or balanced performance",
+      "triggers": [
+        "kpi_conflict",
+        "budget_limits",
+        "persona_structure_variance",
+        "scale_vs_precision_tension"
+      ],
+      "inputs": [
+        "kpi",
+        "budget",
+        "persona_structure"
+      ],
+      "outputs": {
+        "recommended_path": "quality | scale | balanced",
+        "rationale": "Why this tradeoff",
+        "persona_mix_adjustment": "How persona emphasis shifts"
+      },
+      "paths": {
+        "quality_first": {
+          "description": "High-intent, higher CPM, narrower persona emphasis",
+          "trigger": "high_kpi_pressure"
+        },
+        "scale_first": {
+          "description": "Broader reach, cost-efficient expansion",
+          "trigger": "low_kpi_pressure"
+        },
+        "balanced": {
+          "description": "Midpoint option balancing coverage and accuracy",
+          "trigger": "mixed_goals"
+        }
+      },
+      "kpi_buckets": {
+        "upper_funnel": ["reach", "video_completion_rate", "view_through"],
+        "mid_funnel": ["site_visits", "qualified_traffic", "engagement"],
+        "lower_funnel": ["conversion", "foot_traffic", "CPA_outcomes"]
+      },
+      "fallback_behavior": "If KPI unspecified, default to balanced",
+      "exit_criteria": "One of the three paths chosen with rationale",
+      "transitions": {
+        "success": "STATE_PRE_ACTIVATION",
+        "needs_info": "STATE_CLARIFICATION"
+      }
+    },
+
+    "neutral": {
+      "id": "STATE_NEUTRAL",
+      "description": "Handle irrelevant or low-signal content without losing direction",
+      "triggers": [
+        "off_topic_input",
+        "ambiguous_text",
+        "irrelevant_details"
+      ],
+      "inputs": [
+        "user_message"
+      ],
+      "outputs": {
+        "redirect": "Clean reframing back to strategic path",
+        "next_actionable_question": "A single clear question to resume flow"
+      },
+      "fallback_behavior": "Stay calm, concise, and avoid drift",
+      "exit_criteria": "Conversation re-centered on strategy",
+      "transitions": {
+        "success": "PREVIOUS_STATE",
+        "needs_info": "STATE_CLARIFICATION"
+      }
+    },
+
+    "pre_activation": {
+      "id": "STATE_PRE_ACTIVATION",
+      "description": "Finalize reasoning outputs for handoff to Activation Layer",
+      "triggers": [
+        "all_reasoning_states_complete"
+      ],
+      "inputs": [
+        "funnel_stage",
+        "media_mix",
+        "platform_path",
+        "persona_emphasis",
+        "performance_path"
+      ],
+      "outputs": {
+        "platform_path": "Final routing decision",
+        "budget_window": "Structured spend window",
+        "media_mix": "CTV/OLV/Audio/Display allocation",
+        "funnel_assignment": "Upper/mid/lower",
+        "persona_emphasis": "Weighting guidance",
+        "strategic_rationale": "1-2 sentence summary",
+        "clean_summary_block": "Pre-formatted activation inputs"
+      },
+      "exit_criteria": "All outputs ready for Activation Layer",
+      "transitions": {
+        "success": "ACTIVATION_LAYER"
+      }
+    }
+  },
+
+  "decision_trees": {
+    "tree_0_category_logic": {
+      "id": "TREE_CATEGORY",
+      "purpose": "Primary reasoning fork. Category determines the first logic pathway before funnel, mix, or platform are evaluated.",
+      "canonical_rule": "Category = first fork. All other reasoning inherits from this.",
+      "inputs": ["category", "objective", "primary_tension"],
+      "outputs": [
+        "reasoning_pathway",
+        "funnel_bias",
+        "media_mix_bias",
+        "platform_bias",
+        "budget_expectations",
+        "user_expectation_model"
+      ],
+      "category_profiles": {
+        "QSR": {
+          "mix_bias": "CTV-heavy",
+          "persona_orientation": "routine-driven",
+          "behavioral_tension": "weekend rituals, convenience",
+          "funnel_bias": "mid",
+          "budget_expectation": "medium"
+        },
+        "Auto": {
+          "mix_bias": "upper + mid blend",
+          "tension": "storytelling + functional cues",
+          "funnel_bias": "upper_to_mid",
+          "budget_expectation": "high"
+        },
+        "Finance": {
+          "mix_bias": "display + video hybrid",
+          "behavioral_tension": "stability",
+          "geo_rules": "narrow DMA tolerance",
+          "funnel_bias": "mid",
+          "budget_expectation": "high"
+        },
+        "Beauty": {
+          "mix_bias": "CTV + social blend",
+          "tension": "identity-first",
+          "emotional_center": "self-expression",
+          "funnel_bias": "upper",
+          "budget_expectation": "medium_to_high"
+        },
+        "Retail": {
+          "mix_bias": "balanced CTV + Display",
+          "tension": "value + discovery",
+          "funnel_bias": "mid_to_lower",
+          "budget_expectation": "varies"
+        },
+        "CPG": {
+          "mix_bias": "CTV + Audio",
+          "tension": "habit + routine",
+          "funnel_bias": "upper_to_mid",
+          "budget_expectation": "high"
+        }
+      }
+    },
+
+    "tree_a_budget_window": {
+      "id": "TREE_BUDGET",
+      "purpose": "Determine budget constraints, windowing, and persona/mix adjustments",
+      "inputs": ["total_budget", "flight_length", "scale_demand"],
+      "outputs": [
+        "recommended_budget_window",
+        "persona_weighting_adjustment",
+        "mix_calibration",
+        "rationale"
+      ],
+      "rules": {
+        "low_budget": {
+          "threshold": "< $50,000",
+          "description": "Tighter personas + higher funnel",
+          "effects": [
+            "reduce persona spread",
+            "increase upper-funnel priority",
+            "limit platform flexibility"
+          ],
+          "recommended_window": "single"
+        },
+        "mid_budget": {
+          "threshold": "$50,000 - $100,000",
+          "description": "Balanced approach",
+          "effects": [
+            "balanced persona spread",
+            "even mix",
+            "platform optionality"
+          ],
+          "recommended_window": "single or split"
+        },
+        "high_budget": {
+          "threshold": "> $100,000",
+          "description": "Scale-first with quality guardrails",
+          "effects": [
+            "maximize mix spread",
+            "hybrid DSP + Direct path recommended",
+            "increased persona range"
+          ],
+          "recommended_window": "split or adaptive"
+        }
+      }
+    },
+
+    "tree_b_dsp_vs_direct": {
+      "id": "TREE_PLATFORM",
+      "purpose": "Route plan to correct activation platform",
+      "inputs": [
+        "budget",
+        "timeline",
+        "creative_assets",
+        "scale_requirement",
+        "control_preference",
+        "geography"
+      ],
+      "outputs": [
+        "DSP_path",
+        "Direct_path",
+        "Hybrid_path",
+        "explanation"
+      ],
+      "decision_flow": [
+        {
+          "step": 1,
+          "check": "timeline",
+          "if": "< 48 hours",
+          "then": "Direct via RJM"
+        },
+        {
+          "step": 2,
+          "check": "advertiser_constraints",
+          "if": "must use DSP seat",
+          "then": "Specific DSP path"
+        },
+        {
+          "step": 3,
+          "check": "channel_priority",
+          "if": "CTV-first",
+          "then": "SSP or DSP depending on availability"
+        },
+        {
+          "step": 4,
+          "check": "budget",
+          "if": "< $50,000",
+          "then": "DSP"
+        },
+        {
+          "step": 5,
+          "check": "budget",
+          "if": "> $100,000",
+          "then": "Hybrid recommended"
+        }
+      ],
+      "dma_routing_rule": {
+        "dma_targeting": "Default = DSP path",
+        "dma_plus_pmp": "Direct optional, but DSP recommended"
+      }
+    },
+
+    "tree_c_media_mix": {
+      "id": "TREE_MIX",
+      "purpose": "Map funnel + category + persona motivation + creative angle → channel mix",
+      "inputs": [
+        "funnel_stage",
+        "category",
+        "persona_motivations",
+        "creative_angle"
+      ],
+      "outputs": [
+        "CTV_percentage",
+        "OLV_percentage",
+        "Audio_percentage",
+        "Display_percentage",
+        "justification_logic",
+        "funnel_anchor_adjustments"
+      ],
+      "mix_templates": {
+        "upper_funnel_emotional": {
+          "CTV": "50-60%",
+          "OLV": "25-30%",
+          "Audio": "10-15%",
+          "Display": "5-10%"
+        },
+        "mid_funnel_balanced": {
+          "CTV": "35-45%",
+          "OLV": "30-35%",
+          "Audio": "15-20%",
+          "Display": "10-15%"
+        },
+        "lower_funnel_performance": {
+          "CTV": "20-30%",
+          "OLV": "25-30%",
+          "Audio": "20-25%",
+          "Display": "20-30%"
+        }
+      },
+      "creative_angle_modifiers": {
+        "emotional_storytelling": {
+          "CTV": "+10%",
+          "Display": "-10%"
+        },
+        "functional_creative": {
+          "OLV": "+10%",
+          "Audio": "+5%",
+          "CTV": "-15%"
+        }
+      }
+    },
+
+    "tree_d_funnel_mapping": {
+      "id": "TREE_FUNNEL",
+      "purpose": "Determine funnel placement from category tension, behavior, and objective",
+      "inputs": [
+        "category_tension",
+        "campaign_goal",
+        "audience_behavior"
+      ],
+      "outputs": [
+        "funnel_assignment",
+        "persona_emphasis_shift",
+        "generational_weighting"
+      ],
+      "rules": {
+        "emotional_categories": "upper_funnel",
+        "commodity_categories": "mid_funnel",
+        "direct_response": "lower_funnel"
+      },
+      "funnel_dependency_rule": {
+        "hierarchy": [
+          "Funnel determines Mix",
+          "Mix determines Platform Path"
+        ],
+        "note": "Modes are not equal — Funnel anchors entire reasoning sequence"
+      }
+    },
+
+    "tree_e_performance_vs_scale": {
+      "id": "TREE_PERFORMANCE",
+      "purpose": "Determine quality-first vs scale-first vs balanced",
+      "inputs": ["kpi", "budget", "persona_structure"],
+      "outputs": [
+        "recommended_path",
+        "rationale",
+        "persona_mix_adjustment"
+      ],
+      "rules": {
+        "high_kpi_pressure": "quality_first",
+        "low_kpi_pressure": "scale_first",
+        "mixed_goals": "balanced"
+      }
+    }
+  },
+
+  "clarifying_questions": {
+    "rules": {
+      "one_question_at_a_time": true,
+      "only_when_required": true,
+      "never_multiple": true,
+      "never_phishing_for_info": true,
+      "tone_alignment": "MIRA_strategist",
+      "minimal_required_inputs_only": true
+    },
+    "question_bank": {
+      "budget": {
+        "triggers": ["budget_missing", "unclear_spend", "timeline_mismatch"],
+        "prompts": [
+          "What's your budget window?",
+          "Roughly what level of spend are you planning for this campaign?",
+          "Are you working with a fixed budget or a flexible range?"
+        ]
+      },
+      "funnel": {
+        "triggers": ["objective_vague", "kpi_unclear", "category_requires_funnel"],
+        "prompts": [
+          "Is this upper-funnel, mid-funnel, or both?",
+          "Which outcome matters most — awareness, consideration, or response?"
+        ]
+      },
+      "platform": {
+        "triggers": ["routing_unclear", "budget_suggests_split", "timeline_pressure"],
+        "prompts": [
+          "Are you running this through DSP or direct?",
+          "Do you have a platform preference — Direct via RJM or DSP?"
+        ]
+      },
+      "scale_vs_quality": {
+        "triggers": ["kpi_conflict", "budget_squeeze", "persona_variance"],
+        "prompts": [
+          "Do you care more about scale or quality?",
+          "Should this campaign prioritize precision or reach?"
+        ]
+      },
+      "geography": {
+        "triggers": ["geography_not_provided", "dma_ambiguity"],
+        "prompts": [
+          "Is this national or DMA-based?",
+          "Are you trying to hit specific local markets or the whole country?"
+        ]
+      },
+      "category": {
+        "triggers": ["category_not_provided", "category_ambiguous"],
+        "prompts": [
+          "Which category does this campaign fall under?",
+          "What type of brand is this — QSR, beauty, retail, auto, finance, or something else?"
+        ]
+      },
+      "creative_angle": {
+        "triggers": ["mix_requires_bias", "creative_type_unclear"],
+        "prompts": [
+          "Is the creative more emotional or more functional?",
+          "Does the campaign lean toward storytelling or direct response?"
+        ]
+      },
+      "objective": {
+        "triggers": ["mixed_goals", "vague_business_ask"],
+        "prompts": [
+          "What's the core objective you want this campaign to achieve?",
+          "If you had to choose one primary goal, what would it be?"
+        ]
+      }
+    }
+  },
+
+  "guardrails": {
+    "reasoning_must": [
+      "align_with_persona_packaging",
+      "reduce_cognitive_load",
+      "maintain_RJM_worldview",
+      "protect_identity_first_logic",
+      "give_the_next_clean_move",
+      "clarify_not_complicate",
+      "interpret_ambiguity",
+      "be_directionally_confident"
+    ],
+    "reasoning_must_not": [
+      "invent_new_personas",
+      "modify_packaging_structure",
+      "contradict_experience_layer",
+      "generate_activation_IDs",
+      "produce_technical_DSP_instructions",
+      "give_general_marketing_advice",
+      "override_world_model_logic",
+      "drift_into_consultant_speak",
+      "request_or_evaluate_creative_files"
+    ]
+  },
+
+  "state_transitions": {
+    "valid_transitions": [
+      ["STATE_ORIENTATION", "STATE_CONSTRAINT"],
+      ["STATE_ORIENTATION", "STATE_CLARIFICATION"],
+      ["STATE_CONSTRAINT", "STATE_FUNNEL"],
+      ["STATE_CONSTRAINT", "STATE_CLARIFICATION"],
+      ["STATE_FUNNEL", "STATE_MIX"],
+      ["STATE_FUNNEL", "STATE_CLARIFICATION"],
+      ["STATE_MIX", "STATE_PLATFORM"],
+      ["STATE_MIX", "STATE_CLARIFICATION"],
+      ["STATE_PLATFORM", "STATE_PERFORMANCE"],
+      ["STATE_PLATFORM", "STATE_CLARIFICATION"],
+      ["STATE_PERFORMANCE", "STATE_PRE_ACTIVATION"],
+      ["STATE_PERFORMANCE", "STATE_CLARIFICATION"],
+      ["STATE_PRE_ACTIVATION", "ACTIVATION_LAYER"],
+      ["STATE_NEUTRAL", "ANY_PREVIOUS_STATE"],
+      ["STATE_CLARIFICATION", "ANY_REASONING_STATE"]
+    ],
+    "always_allowed": [
+      "Any state → STATE_NEUTRAL (on off-topic input)",
+      "Any state → STATE_CLARIFICATION (on missing info)"
+    ]
+  }
+}
+

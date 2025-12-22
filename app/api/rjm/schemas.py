@@ -1,6 +1,6 @@
-"""Request and response schemas for RJM / MIRA persona program generation."""
+"""Request and response schemas for RJM / MIRA persona program generation and chat."""
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -178,6 +178,121 @@ class SyncResponse(BaseModel):
 
     summary: SyncSummary
     details: List[DocumentSyncDetail] = Field(default_factory=list)
+
+
+class ChatMessage(BaseModel):
+    """Single chat message in a MIRA conversational session."""
+
+    role: Literal["user", "assistant"] = Field(
+        ...,
+        description="Message role. System behavior is governed by the behavioral engine, not this field.",
+    )
+    content: str = Field(..., min_length=1, description="Message text content.")
+
+
+class MiraChatRequest(BaseModel):
+    """Request schema for POST /v1/rjm/chat."""
+
+    messages: List[ChatMessage] = Field(
+        ...,
+        min_length=1,
+        description="Full message history for this turn (at minimum, the latest user message).",
+    )
+    state: Optional[str] = Field(
+        default=None,
+        description=(
+            "Current behavioral state id (e.g., STATE_GREETING, STATE_INPUT). "
+            "If omitted, the engine assumes a fresh GREETING entry."
+        ),
+    )
+    session_id: Optional[str] = Field(
+        default=None,
+        description="Opaque session identifier returned by the server. Send it back each turn for memory.",
+    )
+    brand_name: Optional[str] = Field(
+        default=None,
+        description=(
+            "Optional explicit brand name. Required once moving into program generation / reasoning."
+        ),
+    )
+    brief: Optional[str] = Field(
+        default=None,
+        description=(
+            "Optional explicit campaign brief. Required once moving into program generation / reasoning."
+        ),
+    )
+
+
+class MiraChatResponse(BaseModel):
+    """Response schema for a single MIRA chat turn."""
+
+    reply: str = Field(
+        ...,
+        description="MIRA's strategist-style reply text, with guiding-move behavior applied.",
+    )
+    state: str = Field(
+        ...,
+        description="Next behavioral state id that the client should send back on the next turn.",
+    )
+    session_id: Optional[str] = Field(
+        default=None,
+        description="Opaque session identifier to persist memory server-side.",
+    )
+    # Optional debug hook to help local development; not for end users.
+    debug_state_was: Optional[str] = Field(
+        default=None,
+        description="Previous state id used to compute this reply (for debugging / logging).",
+    )
+    # Optional generation data for saving persona programs
+    generation_data: Optional[Dict] = Field(
+        default=None,
+        description="Generated persona program data if a program was generated in this turn.",
+    )
+
+
+class TranscriptionResponse(BaseModel):
+    """Response schema for audio transcription."""
+
+    text: str = Field(
+        ...,
+        description="Transcribed text from the audio input.",
+    )
+    duration_seconds: Optional[float] = Field(
+        default=None,
+        description="Duration of the processed audio in seconds.",
+    )
+
+
+class PersonaGenerationResponse(BaseModel):
+    """Response schema for a saved persona generation."""
+
+    id: str = Field(..., description="Unique identifier for the generation")
+    brand_name: str = Field(..., description="Brand name for the program")
+    brief: str = Field(..., description="Campaign brief")
+    program_text: str = Field(..., description="Human-readable formatted program text")
+    program_json: Optional[Dict] = Field(
+        default=None,
+        description="Structured program data as JSON"
+    )
+    advertising_category: Optional[str] = Field(
+        default=None,
+        description="Detected advertising category"
+    )
+    source: str = Field(
+        default="generator",
+        description="Source of generation: 'generator' or 'chat'"
+    )
+    created_at: str = Field(..., description="ISO timestamp of when the program was generated")
+
+
+class PersonaGenerationListResponse(BaseModel):
+    """Response schema for listing persona generations."""
+
+    generations: List[PersonaGenerationResponse] = Field(
+        default_factory=list,
+        description="List of persona generations"
+    )
+    total: int = Field(default=0, description="Total number of generations")
 
 
 
