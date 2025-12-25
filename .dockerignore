@@ -1,0 +1,102 @@
+# ============================================
+# RJM Backend - Docker Ignore
+# ============================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.log
+.hypothesis/
+
+# Build
+build/
+dist/
+*.whl
+
+# Documentation (not needed in container)
+docs/
+*.md
+!README.md
+
+# Local database
+local.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs (will be created fresh in container)
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.docker/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+azure-pipelines.yml
+
+# Tests (not needed in production)
+tests/
+pytest.ini
+
+# Scripts (not needed in production)
+scripts/
+
+# Supabase local
+supabase/
+
+# Lock file is needed, but ignore local development files
+.python-version
+

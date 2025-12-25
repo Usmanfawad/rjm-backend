@@ -1,4 +1,4 @@
-"""RJM document sync service."""
+"""RJM document sync service using Supabase REST API."""
 
 from __future__ import annotations
 
@@ -7,13 +7,11 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
-
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
+from uuid import uuid4
 
 from app.config.logger import app_logger
 from app.config.settings import settings
-from app.models.rjm_document import RJMDocument
+from app.db.supabase_db import get_records, insert_record, update_record, delete_record
 from app.services.rjm_vector_store import (
     delete_vectors,
     embed_texts,
@@ -43,12 +41,15 @@ def _compute_hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def _vector_ids_for_doc(doc: RJMDocument) -> List[str]:
-    return [f"{doc.id}:{i}" for i in range(doc.chunk_count)]
+def _vector_ids_for_doc(doc_id: str, chunk_count: int) -> List[str]:
+    return [f"{doc_id}:{i}" for i in range(chunk_count)]
 
 
-async def sync_rjm_documents(session: AsyncSession) -> Dict[str, object]:
-    """Sync RJM documents from disk into the vector store and DB."""
+async def sync_rjm_documents() -> Dict[str, object]:
+    """Sync RJM documents from disk into the vector store and Supabase.
+    
+    Uses Supabase REST API for database operations.
+    """
     docs_dir = Path(settings.RJM_DOCS_DIR).resolve()
     if not docs_dir.exists():
         raise FileNotFoundError(f"RJM docs directory not found: {docs_dir}")
@@ -56,8 +57,9 @@ async def sync_rjm_documents(session: AsyncSession) -> Dict[str, object]:
     start_time = time.time()
     index = get_pinecone_index()  # Ensure client initialized (side effects only)
 
-    result = await session.execute(select(RJMDocument))
-    existing_docs = {doc.relative_path: doc for doc in result.scalars().all()}
+    # Get existing documents from Supabase
+    existing_docs_list = await get_records("rjm_documents")
+    existing_docs = {doc["relative_path"]: doc for doc in existing_docs_list}
     processed_paths: set[str] = set()
 
     summary = {
@@ -81,30 +83,39 @@ async def sync_rjm_documents(session: AsyncSession) -> Dict[str, object]:
         content_hash = _compute_hash(text)
         doc = existing_docs.get(rel_path)
 
-        if doc and doc.content_hash == content_hash:
+        if doc and doc.get("content_hash") == content_hash:
             summary["unchanged"] += 1
             summary["details"].append(
-                {"relative_path": rel_path, "action": "unchanged", "chunk_count": doc.chunk_count}
+                {"relative_path": rel_path, "action": "unchanged", "chunk_count": doc.get("chunk_count", 0)}
             )
             continue
 
         if doc is None:
-            doc = RJMDocument(
-                file_name=path.name,
-                relative_path=rel_path,
-                content_hash=content_hash,
-                chunk_size=DEFAULT_CHUNK_SIZE,
-                chunk_overlap=DEFAULT_CHUNK_OVERLAP,
-            )
+            # Create new document
+            doc_id = str(uuid4())
+            doc = {
+                "id": doc_id,
+                "file_name": path.name,
+                "relative_path": rel_path,
+                "content_hash": content_hash,
+                "chunk_size": DEFAULT_CHUNK_SIZE,
+                "chunk_overlap": DEFAULT_CHUNK_OVERLAP,
+                "chunk_count": 0,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
             existing_docs[rel_path] = doc
             action = "created"
             summary["created"] += 1
         else:
             action = "updated"
             summary["updated"] += 1
+            doc_id = doc["id"]
 
-        if doc.chunk_count:
-            delete_vectors(_vector_ids_for_doc(doc))
+        # Delete old vectors if updating
+        old_chunk_count = doc.get("chunk_count", 0)
+        if old_chunk_count:
+            delete_vectors(_vector_ids_for_doc(doc_id, old_chunk_count))
 
         chunks = _chunk_document_text(text)
         if not chunks:
@@ -115,11 +126,11 @@ async def sync_rjm_documents(session: AsyncSession) -> Dict[str, object]:
         for i, (chunk_text, embedding) in enumerate(zip(chunks, embeddings, strict=False)):
             vectors.append(
                 {
-                    "id": f"{doc.id}:{i}",
+                    "id": f"{doc_id}:{i}",
                     "values": embedding,
                     "metadata": {
                         "source": rel_path,
-                        "file_name": doc.file_name,
+                        "file_name": path.name,
                         "text": chunk_text,
                     },
                 }
@@ -130,29 +141,42 @@ async def sync_rjm_documents(session: AsyncSession) -> Dict[str, object]:
         for i in range(0, len(vectors), batch_size):
             upsert_vectors(vectors[i : i + batch_size])
 
-        doc.file_name = path.name
-        doc.content_hash = content_hash
-        doc.chunk_count = len(chunks)
-        doc.last_synced_at = datetime.now(timezone.utc)
-        doc.updated_at = doc.last_synced_at
-        await session.merge(doc)
+        # Update or insert document in Supabase
+        now = datetime.now(timezone.utc).isoformat()
+        doc_data = {
+            "file_name": path.name,
+            "content_hash": content_hash,
+            "chunk_count": len(chunks),
+            "last_synced_at": now,
+            "updated_at": now,
+        }
+
+        if action == "created":
+            doc_data["id"] = doc_id
+            doc_data["relative_path"] = rel_path
+            doc_data["chunk_size"] = DEFAULT_CHUNK_SIZE
+            doc_data["chunk_overlap"] = DEFAULT_CHUNK_OVERLAP
+            doc_data["created_at"] = now
+            await insert_record("rjm_documents", doc_data)
+        else:
+            await update_record("rjm_documents", doc_id, doc_data)
 
         summary["details"].append(
-            {"relative_path": rel_path, "action": action, "chunk_count": doc.chunk_count}
+            {"relative_path": rel_path, "action": action, "chunk_count": len(chunks)}
         )
 
     # Handle deletions (files removed from disk)
     for rel_path, doc in list(existing_docs.items()):
         if rel_path in processed_paths:
             continue
-        delete_vectors(_vector_ids_for_doc(doc))
-        await session.delete(doc)
+        doc_id = doc["id"]
+        chunk_count = doc.get("chunk_count", 0)
+        delete_vectors(_vector_ids_for_doc(doc_id, chunk_count))
+        await delete_record("rjm_documents", doc_id)
         summary["deleted"] += 1
         summary["details"].append(
-            {"relative_path": rel_path, "action": "deleted", "chunk_count": doc.chunk_count}
+            {"relative_path": rel_path, "action": "deleted", "chunk_count": chunk_count}
         )
-
-    await session.commit()
 
     elapsed = time.time() - start_time
     summary["elapsed_seconds"] = round(elapsed, 2)
@@ -168,5 +192,3 @@ async def sync_rjm_documents(session: AsyncSession) -> Dict[str, object]:
     )
 
     return summary
-
-

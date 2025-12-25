@@ -1,13 +1,10 @@
 """Authentication utilities and dependency injection."""
 
 from typing import Optional
-from uuid import UUID
 
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.db import get_session
 from app.config.logger import app_logger
 from app.config.settings import settings
 from app.utils.local_tokens import decode_local_token
@@ -90,13 +87,11 @@ async def verify_token(token: str = Depends(get_auth_token)) -> dict:
 
 async def get_current_user_id(
     token_payload: dict = Depends(verify_token),
-    session: AsyncSession = Depends(get_session),
 ) -> Optional[str]:
     """Get current user ID from authenticated token.
 
     Args:
         token_payload: Decoded token payload from verify_token
-        session: Database session
 
     Returns:
         str: Current user ID (UUID as string) or None if not found

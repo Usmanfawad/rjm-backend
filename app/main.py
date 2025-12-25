@@ -2,14 +2,14 @@ import os
 import subprocess
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Optional
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config.logger import app_logger, log_request_start, log_request_end, log_request_error
-from app.db.db import init_db, close_db, ping_database
+from app.db.supabase_db import ping_supabase
 from app.db.seed import ensure_seed_admin_user
 from app.api.test_items import router as test_items_router
 from app.api.auth.router import router as auth_router
@@ -41,27 +41,31 @@ def get_git_sha() -> str:
 
 
 @asynccontextmanager
-
 async def lifespan(app: FastAPI):
     """Application lifespan context manager for startup and shutdown events."""
     # Startup
     app_logger.info("RJM Backend Core API starting up")
-    app_logger.info("Application initialized successfully")
+    app_logger.info("Using Supabase REST API (HTTPS) for database operations")
     app_logger.info("Logging system active - logs will be saved to logs/ directory")
-    # Initialize database + seed user
+    
+    # Test Supabase connection and seed user
     try:
-        await init_db()
-        await ensure_seed_admin_user()
+        is_ok, message = await ping_supabase()
+        if is_ok:
+            app_logger.info(f"Supabase connection: {message}")
+            await ensure_seed_admin_user()
+        else:
+            app_logger.warning(f"Supabase connection issue: {message}")
+            app_logger.warning("Auth endpoints may not work. Check SUPABASE_* environment variables.")
     except Exception as e:
-        app_logger.error(f"Failed to initialize database: {e}")
+        app_logger.warning(f"Supabase initialization: {e}")
+        app_logger.info("Make sure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are configured")
+    
+    app_logger.info("Application initialized successfully")
     
     yield
     
     # Shutdown
-    try:
-        await close_db()
-    except Exception as e:
-        app_logger.error(f"Failed to close database: {e}")
     app_logger.info("RJM Backend Core API shutting down")
     app_logger.info("Application shutdown complete")
 
@@ -141,6 +145,7 @@ async def root():
         "message": "Welcome to RJM Backend Core API",
         "version": "1.0.0",
         "status": "operational",
+        "database": "Supabase REST API",
         "docs": "/docs",
         "redoc": "/redoc"
     }
@@ -166,14 +171,14 @@ async def status():
 
 @app.get("/health/db", tags=["health"])
 async def health_db():
-    """Database health endpoint: returns 200 if DB responds to SELECT 1."""
-    is_ok, message = await ping_database()
+    """Database health endpoint: checks Supabase REST API connection."""
+    is_ok, message = await ping_supabase()
     if not is_ok:
         return JSONResponse(
             status_code=503,
             content={"status": "degraded", "db": "unavailable", "message": message}
         )
-    return {"status": "ok", "db": "available", "message": message}
+    return {"status": "ok", "db": "available", "connection": "Supabase REST API", "message": message}
 
 
 # Include API routers
