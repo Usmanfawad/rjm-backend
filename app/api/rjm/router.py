@@ -6,8 +6,6 @@ from typing import List, Optional, Set
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.logger import app_logger
 from app.api.rjm.schemas import (
@@ -16,15 +14,13 @@ from app.api.rjm.schemas import (
     DocumentSyncDetail,
     SyncResponse,
     SyncSummary,
-    Persona,
     MiraChatRequest,
     MiraChatResponse,
     TranscriptionResponse,
     PersonaGenerationResponse,
     PersonaGenerationListResponse,
 )
-from app.db.db import get_session
-from app.models.persona_generation import PersonaGeneration
+from app.db.supabase_db import insert_record, get_records
 from app.services.mira_chat import handle_chat_turn
 from app.services.rjm_rag import generate_program_with_rag
 from app.services.rjm_sync import sync_rjm_documents
@@ -32,7 +28,6 @@ from app.utils.responses import SuccessResponse, success_response
 from app.utils.auth import get_current_user_id, require_auth
 from app.services.rjm_ingredient_canon import (
     ALL_GENERATIONAL_NAMES,
-    GENERATIONS,
     get_category_personas,
     get_dual_anchors,
     infer_category as infer_ad_category,
@@ -83,7 +78,6 @@ def _clean_highlight(name: str, highlight: str) -> str:
 )
 async def generate_persona_program(
     request: GenerateProgramRequest,
-    session: AsyncSession = Depends(get_session),
     user_id: Optional[str] = Depends(get_current_user_id),
 ) -> SuccessResponse[GenerateProgramResponse]:
     """Generate a single RJM-style persona program from a brief.
@@ -95,8 +89,6 @@ async def generate_persona_program(
     - Enforces schema + formatting to mirror RJM Packaging API / MIRA schema.
     - Saves the generation to the database if user is authenticated.
     """
-    start_time = datetime.now(timezone.utc)
-
     try:
         app_logger.info(
             f"RJM generate request for brand={request.brand_name}"
@@ -291,22 +283,24 @@ async def generate_persona_program(
 
         program_text = "\n".join(lines)
 
-        # Save the generation to the database if user is authenticated
+        # Save the generation to Supabase if user is authenticated
         if user_id:
             try:
-                persona_gen = PersonaGeneration(
-                    user_id=UUID(user_id),
-                    brand_name=request.brand_name,
-                    brief=request.brief,
-                    program_text=program_text,
-                    program_json=program_json.model_dump_json(),
-                    advertising_category=detected_category,
-                    source="generator",
-                )
-                session.add(persona_gen)
-                await session.commit()
+                from uuid import uuid4
+                gen_id = str(uuid4())
+                await insert_record("persona_generations", {
+                    "id": gen_id,
+                    "user_id": user_id,
+                    "brand_name": request.brand_name,
+                    "brief": request.brief,
+                    "program_text": program_text,
+                    "program_json": program_json.model_dump_json(),
+                    "advertising_category": detected_category,
+                    "source": "generator",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                })
                 app_logger.info(
-                    f"Saved persona generation id={persona_gen.id} for user={user_id}"
+                    f"Saved persona generation id={gen_id} for user={user_id}"
                 )
             except Exception as save_error:
                 app_logger.warning(
@@ -341,12 +335,10 @@ async def generate_persona_program(
     response_model=SuccessResponse[SyncResponse],
     summary="Sync RJM documents into Pinecone and the local database",
 )
-async def sync_rjm_corpus(
-    session: AsyncSession = Depends(get_session),
-) -> SuccessResponse[SyncResponse]:
+async def sync_rjm_corpus() -> SuccessResponse[SyncResponse]:
     """Sync RJM documents and embeddings (idempotent)."""
     try:
-        result = await sync_rjm_documents(session)
+        result = await sync_rjm_documents()
     except FileNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
     except RuntimeError as exc:
@@ -417,7 +409,6 @@ def _fill_persona_list(
 )
 async def mira_chat_turn(
     request: MiraChatRequest,
-    session: AsyncSession = Depends(get_session),
     user_id: Optional[str] = Depends(get_current_user_id),
 ) -> SuccessResponse[MiraChatResponse]:
     """
@@ -435,24 +426,26 @@ async def mira_chat_turn(
     """
     result = handle_chat_turn(request, user_id=user_id)
     
-    # Check if a generation was created and save it
+    # Check if a generation was created and save it to Supabase
     if result.generation_data and user_id:
         try:
+            from uuid import uuid4
             gen_data = result.generation_data
-            persona_gen = PersonaGeneration(
-                user_id=UUID(user_id),
-                brand_name=gen_data["brand_name"],
-                brief=gen_data["brief"],
-                program_text=gen_data["program_text"],
-                program_json=gen_data["program_json"],
-                advertising_category=gen_data.get("advertising_category"),
-                source="chat",
-                session_id=result.session_id,
-            )
-            session.add(persona_gen)
-            await session.commit()
+            gen_id = str(uuid4())
+            await insert_record("persona_generations", {
+                "id": gen_id,
+                "user_id": user_id,
+                "brand_name": gen_data["brand_name"],
+                "brief": gen_data["brief"],
+                "program_text": gen_data["program_text"],
+                "program_json": gen_data["program_json"],
+                "advertising_category": gen_data.get("advertising_category"),
+                "source": "chat",
+                "session_id": result.session_id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
             app_logger.info(
-                f"Saved persona generation from chat id={persona_gen.id} for user={user_id}"
+                f"Saved persona generation from chat id={gen_id} for user={user_id}"
             )
         except Exception as save_error:
             app_logger.warning(
@@ -563,7 +556,6 @@ async def transcribe_audio_endpoint(
     summary="List all persona generations for the current user",
 )
 async def list_persona_generations(
-    session: AsyncSession = Depends(get_session),
     user_id: str = Depends(require_auth),
     limit: int = 50,
     offset: int = 0,
@@ -573,43 +565,35 @@ async def list_persona_generations(
     Returns a list of generated persona programs ordered by creation date (newest first).
     """
     try:
-        # Query generations for this user
-        query = (
-            select(PersonaGeneration)
-            .where(PersonaGeneration.user_id == UUID(user_id))
-            .order_by(PersonaGeneration.created_at.desc())
-            .offset(offset)
-            .limit(limit)
+        # Query generations for this user via Supabase REST API
+        generations = await get_records(
+            "persona_generations",
+            filters={"user_id": user_id},
+            limit=limit,
+            order_by="created_at",
+            ascending=False,
         )
-        result = await session.execute(query)
-        generations = result.scalars().all()
 
-        # Count total
-        count_query = (
-            select(PersonaGeneration)
-            .where(PersonaGeneration.user_id == UUID(user_id))
-        )
-        count_result = await session.execute(count_query)
-        total = len(count_result.scalars().all())
+        total = len(generations)
 
         # Convert to response format
         generation_responses = []
         for gen in generations:
             try:
-                program_json_data = json.loads(gen.program_json) if gen.program_json else None
+                program_json_data = json.loads(gen.get("program_json", "")) if gen.get("program_json") else None
             except json.JSONDecodeError:
                 program_json_data = None
 
             generation_responses.append(
                 PersonaGenerationResponse(
-                    id=str(gen.id),
-                    brand_name=gen.brand_name,
-                    brief=gen.brief,
-                    program_text=gen.program_text,
+                    id=str(gen["id"]),
+                    brand_name=gen.get("brand_name", ""),
+                    brief=gen.get("brief", ""),
+                    program_text=gen.get("program_text", ""),
                     program_json=program_json_data,
-                    advertising_category=gen.advertising_category,
-                    source=gen.source,
-                    created_at=gen.created_at.isoformat(),
+                    advertising_category=gen.get("advertising_category"),
+                    source=gen.get("source"),
+                    created_at=gen.get("created_at", ""),
                 )
             )
 
@@ -636,7 +620,6 @@ async def list_persona_generations(
 )
 async def get_persona_generation(
     generation_id: str,
-    session: AsyncSession = Depends(get_session),
     user_id: str = Depends(require_auth),
 ) -> SuccessResponse[PersonaGenerationResponse]:
     """Get a specific persona program generation by ID.
@@ -644,7 +627,8 @@ async def get_persona_generation(
     Only returns the generation if it belongs to the authenticated user.
     """
     try:
-        gen_uuid = UUID(generation_id)
+        # Validate UUID format
+        UUID(generation_id)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -652,37 +636,36 @@ async def get_persona_generation(
         )
 
     try:
-        query = (
-            select(PersonaGeneration)
-            .where(
-                PersonaGeneration.id == gen_uuid,
-                PersonaGeneration.user_id == UUID(user_id),
-            )
+        # Query via Supabase REST API
+        generations = await get_records(
+            "persona_generations",
+            filters={"id": generation_id, "user_id": user_id},
+            limit=1,
         )
-        result = await session.execute(query)
-        gen = result.scalar_one_or_none()
 
-        if not gen:
+        if not generations:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Persona generation not found",
             )
 
+        gen = generations[0]
+
         try:
-            program_json_data = json.loads(gen.program_json) if gen.program_json else None
+            program_json_data = json.loads(gen.get("program_json", "")) if gen.get("program_json") else None
         except json.JSONDecodeError:
             program_json_data = None
 
         return success_response(
             data=PersonaGenerationResponse(
-                id=str(gen.id),
-                brand_name=gen.brand_name,
-                brief=gen.brief,
-                program_text=gen.program_text,
+                id=str(gen["id"]),
+                brand_name=gen.get("brand_name", ""),
+                brief=gen.get("brief", ""),
+                program_text=gen.get("program_text", ""),
                 program_json=program_json_data,
-                advertising_category=gen.advertising_category,
-                source=gen.source,
-                created_at=gen.created_at.isoformat(),
+                advertising_category=gen.get("advertising_category"),
+                source=gen.get("source"),
+                created_at=gen.get("created_at", ""),
             ),
             message="Persona generation retrieved successfully",
         )

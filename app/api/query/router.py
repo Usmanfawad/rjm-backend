@@ -1,17 +1,13 @@
 """Query API router for CorpusIQ core endpoints."""
 
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.db.db import get_session
 from app.config.logger import app_logger
 from app.utils.responses import (
     SuccessResponse,
     success_response,
-    error_response,
 )
 from app.api.query.schemas import (
     QueryRequest,
@@ -22,10 +18,7 @@ from app.api.query.schemas import (
     DeleteDataResponse,
     ExportDataResponse,
 )
-from app.utils.auth import (
-    get_current_user_id,
-    require_auth,
-)
+from app.utils.auth import require_auth
 
 router = APIRouter(prefix="/v1", tags=["query"])
 
@@ -33,7 +26,6 @@ router = APIRouter(prefix="/v1", tags=["query"])
 @router.post("/query", response_model=SuccessResponse[QueryResponse])
 async def query(
     request: QueryRequest,
-    session: AsyncSession = Depends(get_session),
     user_id: str = Depends(require_auth),
 ):
     """Contextual retrieval endpoint for semantic search.
@@ -77,7 +69,6 @@ async def query(
 @router.post("/deep_search", response_model=SuccessResponse[DeepSearchResponse])
 async def deep_search(
     request: DeepSearchRequest,
-    session: AsyncSession = Depends(get_session),
     user_id: str = Depends(require_auth),
 ):
     """Multi-source semantic search endpoint.
@@ -129,7 +120,6 @@ async def deep_search(
 
 @router.delete("/delete_my_data", response_model=SuccessResponse[DeleteDataResponse])
 async def delete_my_data(
-    session: AsyncSession = Depends(get_session),
     user_id: str = Depends(require_auth),
 ):
     """GDPR data deletion endpoint.
@@ -193,7 +183,6 @@ async def delete_my_data(
 @router.get("/export_my_data", response_model=SuccessResponse[ExportDataResponse])
 async def export_my_data(
     format: str = "zip",
-    session: AsyncSession = Depends(get_session),
     user_id: str = Depends(require_auth),
 ):
     """GDPR Subject Access Request endpoint.

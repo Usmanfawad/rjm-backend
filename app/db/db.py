@@ -103,7 +103,12 @@ async def init_db() -> None:
     except Exception as e:
         app_logger.error(f"Failed to initialize database: {e}")
         app_logger.error(f"Error type: {type(e).__name__}")
-        raise
+        app_logger.warning("=" * 60)
+        app_logger.warning("DATABASE CONNECTION FAILED - Running in limited mode")
+        app_logger.warning("SQLAlchemy features disabled. Supabase REST API still available.")
+        app_logger.warning("To fix: Use Supabase Connection Pooler or deploy to IPv6-compatible host")
+        app_logger.warning("=" * 60)
+        # Don't raise - allow app to start without database
 
 
 async def close_db() -> None:
@@ -120,7 +125,13 @@ async def close_db() -> None:
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """Dependency to get a database session."""
     if not _session_maker:
-        raise RuntimeError("Database not initialized. Call init_db() first.")
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=503,
+            detail="Database unavailable. The server is running in limited mode. "
+                   "Direct PostgreSQL connection failed (IPv6 not supported on this host). "
+                   "Contact administrator to configure Supabase Connection Pooler."
+        )
     
     async with _session_maker() as session:
         yield session
@@ -130,7 +141,10 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 async def db_session() -> AsyncGenerator[AsyncSession, None]:
     """Async context manager for internal background tasks."""
     if not _session_maker:
-        raise RuntimeError("Database not initialized. Call init_db() first.")
+        raise RuntimeError(
+            "Database not initialized. Direct PostgreSQL connection unavailable. "
+            "Configure Supabase Connection Pooler or deploy to IPv6-compatible host."
+        )
     
     async with _session_maker() as session:
         yield session
