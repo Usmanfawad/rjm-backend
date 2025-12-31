@@ -26,6 +26,14 @@ from app.config.logger import app_logger
 # ════════════════════════════════════════════════════════════════════════════
 
 CATEGORY_PERSONA_MAP: Dict[str, List[str]] = {
+    # B2B & Professional Services - for martech, data companies, SaaS, enterprise
+    "B2B & Professional Services": [
+        "Power Broker", "Boss", "Visionary", "Palo Alto", "Upstart", "Prime Mover", "Disruptor",
+        "Maverick", "Trader", "Entrepreneur", "Builder", "Innovator", "Scholar", "Techie",
+        "Digital Nomad", "Architect", "Potomac Power", "Gordon Gecko", "Planner", "Legacy",
+        "LeBron", "Matador", "QB", "Coach", "Mentor", "Modern Monk", "Reader", "Writer",
+        "Journey", "Morning Commute", "After Hours", "Sideways", "Trailblazer",
+    ],
     "CPG": [
         "Budget-Minded", "Bargain Hunter", "Savvy Shopper", "Planner", "Single Parent", "Caregiver",
         "New Parent", "Weekend Warrior", "Gifter", "Road Trip", "Chef", "Garden Gourmet", "Self-Love",
@@ -271,9 +279,10 @@ AD_CATEGORY_ANCHORS: Dict[str, List[str]] = {
     "Luxury & Fashion": ["RJM Luxury & Fashion"],
     "Alcohol & Spirits": ["RJM Spirits & Alcohol"],
     "Sports & Fitness": ["RJM Sports & Fitness"],
+    "B2B & Professional Services": ["RJM B2B & Professional Services"],
 }
 
-# All 14 anchor names for reference
+# All 15 anchor names for reference (14 original + B2B)
 ALL_ANCHORS: List[str] = [
     "RJM Auto",
     "RJM QSR",
@@ -289,6 +298,7 @@ ALL_ANCHORS: List[str] = [
     "RJM Luxury & Fashion",
     "RJM Spirits & Alcohol",
     "RJM Sports & Fitness",
+    "RJM B2B & Professional Services",
 ]
 
 
@@ -495,9 +505,21 @@ LOCAL_CULTURE_SET: Set[str] = set(LOCAL_CULTURE_DMAS)
 
 # Keyword heuristics for category inference
 CATEGORY_KEYWORDS: Dict[str, Sequence[str]] = {
+    # B2B MUST come first - martech, data companies, enterprise, SaaS
+    "B2B & Professional Services": [
+        "b2b", "saas", "enterprise", "martech", "adtech", "data company", "data platform",
+        "professional services", "consulting", "agency", "marketing technology",
+        "stirista", "livereamp", "liveramp", "oracle data", "nielsen", "iqvia",
+        "salesforce", "hubspot", "marketo", "enterprise software", "client services",
+        "business intelligence", "analytics platform", "data provider", "dsp",
+        "demand-side", "supply-side", "programmatic platform",
+    ],
     "QSR": ["qsr", "fast food", "drive-thru", "quick service", "burger", "fries", "pizza chain"],
     "Culinary & Dining": ["culinary", "dining", "chef", "kitchen", "recipe", "restaurant", "brunch", "menu", "cafe"],
-    "Retail & E-Commerce": ["retail", "apparel", "fashion", "shopping", "store", "threads", "e-commerce", "boutique"],
+    # IMPORTANT: Order matters! More specific categories must come BEFORE broader ones.
+    # "Luxury & Fashion" must come before "Retail & E-Commerce" so "luxury fashion" matches correctly.
+    "Luxury & Fashion": ["luxury", "luxe", "couture", "runway", "glam", "designer", "high-end", "premium fashion", "upscale fashion", "fashion brand", "flagship store", "beauty", "cosmetics", "skincare", "makeup", "l'oréal", "loreal", "elegance", "elegant"],
+    "Retail & E-Commerce": ["retail", "apparel", "shopping", "store", "threads", "e-commerce", "boutique", "mall", "outlet"],
     "Auto": ["auto", "automotive", "suv", "car", "truck", "motors", "dealership", "vehicle"],
     "Finance & Insurance": ["bank", "finance", "insurance", "credit", "loan", "mortgage", "wealth", "investment"],
     "Health & Pharma": ["health", "wellness", "pharma", "fitness", "care", "medical", "vitamin"],
@@ -506,7 +528,6 @@ CATEGORY_KEYWORDS: Dict[str, Sequence[str]] = {
     "Sports & Fitness": ["sports", "fitness", "athletic", "athlete", "gym", "workout"],
     "CPG": ["cpg", "consumer packaged", "grocery", "household", "cleaning", "personal care"],
     "Home & DIY": ["home", "diy", "renovation", "furniture", "garden", "improvement"],
-    "Luxury & Fashion": ["luxury", "couture", "runway", "glam", "designer", "high-end", "premium fashion", "beauty", "cosmetics", "skincare", "makeup", "l'oréal", "loreal"],
     "Alcohol & Spirits": ["spirits", "alcohol", "brew", "distillery", "cocktail", "beer", "wine", "whiskey"],
     "Entertainment": ["entertainment", "streaming", "media", "music", "film", "movie", "tv", "show"],
 }
@@ -552,6 +573,75 @@ def get_brand_categories(brand_name: str) -> List[str]:
 def get_category_personas(category: str) -> List[str]:
     """Return persona names for a given advertising category."""
     return CATEGORY_PERSONA_MAP.get(category, [])
+
+
+def is_persona_valid_for_category(persona_name: str, category: str) -> bool:
+    """
+    Check if a persona is valid for a given category.
+
+    This is the PRIMARY SELECTOR from the Ingredient Canon 11.26.25.
+    A persona must be in the category's persona pool to be valid.
+
+    This prevents wrong-fit personas like:
+    - "Bargain Hunter" for Luxury & Fashion (INVALID)
+    - "Budget-Minded" for Luxury & Fashion (INVALID)
+
+    Args:
+        persona_name: The persona name to check
+        category: The advertising category
+
+    Returns:
+        True if persona is valid for category, False otherwise
+    """
+    if not persona_name or not category:
+        return False
+
+    # Get the category's persona pool
+    category_personas = CATEGORY_PERSONA_MAP.get(category, [])
+    if not category_personas:
+        # Unknown category - fall back to canon check only
+        return is_canon_persona(persona_name)
+
+    # Normalize persona name for matching
+    canonical_name = get_canonical_name(persona_name)
+
+    # Build normalized set of category personas for matching
+    normalized_category_personas = set()
+    for p in category_personas:
+        normalized_category_personas.add(p.lower())
+        normalized_category_personas.add(_normalize_persona_name(p).lower())
+
+    # Check if persona is in category pool
+    if canonical_name.lower() in normalized_category_personas:
+        return True
+    if _normalize_persona_name(canonical_name).lower() in normalized_category_personas:
+        return True
+    if persona_name.lower() in normalized_category_personas:
+        return True
+
+    return False
+
+
+def get_invalid_personas_for_category(persona_names: List[str], category: str) -> List[str]:
+    """
+    Return list of personas that are NOT valid for a given category.
+
+    Useful for debugging and logging which personas were rejected.
+    """
+    invalid = []
+    for name in persona_names:
+        if not is_persona_valid_for_category(name, category):
+            invalid.append(name)
+    return invalid
+
+
+def filter_personas_by_category(persona_names: List[str], category: str) -> List[str]:
+    """
+    Filter a list of personas to only include those valid for the category.
+
+    This is used to enforce the Category → Persona Map as the primary selector.
+    """
+    return [name for name in persona_names if is_persona_valid_for_category(name, category)]
 
 
 def get_category_anchors(category: str) -> List[str]:

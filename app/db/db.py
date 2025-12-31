@@ -89,6 +89,7 @@ async def init_db() -> None:
             test_item,
             rjm_document,
             persona_generation,
+            chat_session,
         )
         
         # Create all tables

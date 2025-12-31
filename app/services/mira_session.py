@@ -43,6 +43,7 @@ class SessionState:
     - Reasoning context from the Reasoning Engine
     - Conversation history for context
     - Generated program summary
+    - Conversational phase (EXPERIENCE → REASONING → PACKAGING → ACTIVATION)
     """
     # Core conversation memory
     brand_name: Optional[str] = None
@@ -52,6 +53,17 @@ class SessionState:
     # Behavioral state
     current_state: str = "STATE_GREETING"
     mode_hint: Optional[str] = None
+
+    # Conversational phase tracking (per Ingredient Canon flow)
+    # EXPERIENCE: Learning about brand, brief, objectives
+    # REASONING: Understanding category, funnel, strategy
+    # PACKAGING: Generating persona program
+    # ACTIVATION: Creating activation plan
+    conversational_phase: str = "EXPERIENCE"
+    experience_complete: bool = False
+    reasoning_complete: bool = False
+    packaging_complete: bool = False
+    activation_complete: bool = False
 
     # Reasoning context (from Reasoning Engine)
     funnel_stage: Optional[str] = None
@@ -63,6 +75,7 @@ class SessionState:
     # Activation state
     activation_plan_generated: bool = False
     program_generated: bool = False
+    activation_shown: bool = False
 
     # Generated program summary (for context in later turns)
     program_summary: Optional[str] = None
@@ -250,7 +263,7 @@ def add_key_point(session_id: str, point: str) -> None:
     _store.add_key_point(session_id, point)
 
 
-def add_message_to_history(session_id: str, role: str, content: str, max_messages: int = 6) -> None:
+def add_message_to_history(session_id: str, role: str, content: str, max_messages: int = 20) -> None:
     """
     Add a message to the conversation history.
 
@@ -258,7 +271,7 @@ def add_message_to_history(session_id: str, role: str, content: str, max_message
         session_id: The session ID
         role: "user" or "assistant"
         content: The message content
-        max_messages: Maximum messages to keep (default 6 = 3 turns)
+        max_messages: Maximum messages to keep (default 20 = 10 turns)
     """
     with _store._lock:
         state = _store._sessions.get(session_id)

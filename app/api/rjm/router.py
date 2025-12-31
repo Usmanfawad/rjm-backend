@@ -19,6 +19,10 @@ from app.api.rjm.schemas import (
     TranscriptionResponse,
     PersonaGenerationResponse,
     PersonaGenerationListResponse,
+    ChatSessionSummary,
+    ChatSessionListResponse,
+    ChatMessageResponse,
+    ChatSessionDetailResponse,
 )
 from app.db.supabase_db import insert_record, get_records
 from app.services.mira_chat import handle_chat_turn
@@ -419,12 +423,47 @@ async def mira_chat_turn(
     - Bridges into the existing Packaging / RAG pipeline when a Persona Program is needed.
     - Returns a strategist-style reply plus the next behavioral state id.
     - Saves any generated persona programs to the database if user is authenticated.
+    - Persists all chat messages to the database for future retrieval and resumption.
 
     The client is responsible for:
     - Sending the `state` from the previous response (or omitting it for a fresh GREETING).
     - Providing `brand_name` and `brief` when ready to generate a program.
+    - Optionally sending `session_id` to continue a previous conversation.
     """
+    # Capture state before processing
+    state_before = request.state or "STATE_GREETING"
+    
+    # Get user message content
+    user_message = ""
+    if request.messages:
+        user_msgs = [m for m in request.messages if m.role == "user"]
+        if user_msgs:
+            user_message = user_msgs[-1].content
+    
     result = handle_chat_turn(request, user_id=user_id)
+    
+    # Persist chat messages to database if user is authenticated
+    if user_id and result.session_id:
+        try:
+            from app.services.chat_persistence import persist_chat_turn
+            from app.services.mira_session import get_session
+            
+            # Get session state for brand/brief/category
+            _, session_state = get_session(result.session_id)
+            
+            await persist_chat_turn(
+                session_id=result.session_id,
+                user_id=user_id,
+                user_message=user_message,
+                assistant_reply=result.reply,
+                state_before=state_before,
+                state_after=result.state,
+                brand_name=session_state.brand_name or request.brand_name,
+                brief=session_state.brief or request.brief,
+                category=session_state.category,
+            )
+        except Exception as persist_error:
+            app_logger.warning(f"Failed to persist chat turn: {persist_error}")
     
     # Check if a generation was created and save it to Supabase
     if result.generation_data and user_id:
@@ -679,3 +718,253 @@ async def get_persona_generation(
             detail=f"Failed to get persona generation: {str(e)}",
         )
 
+
+# ============================================
+# Chat Session Endpoints (History & Resumption)
+# ============================================
+
+@router.get(
+    "/sessions",
+    response_model=SuccessResponse[ChatSessionListResponse],
+    summary="List all chat sessions for the current user",
+)
+async def list_chat_sessions(
+    user_id: str = Depends(require_auth),
+    limit: int = 50,
+    offset: int = 0,
+) -> SuccessResponse[ChatSessionListResponse]:
+    """List all chat sessions for the authenticated user.
+
+    Returns sessions ordered by last activity (most recent first).
+    Use this to display chat history in the UI.
+    """
+    try:
+        from app.services.chat_persistence import get_user_chat_sessions
+        
+        sessions = await get_user_chat_sessions(user_id, limit=limit, offset=offset)
+        
+        session_summaries = [
+            ChatSessionSummary(
+                id=str(s["id"]),
+                title=s.get("title"),
+                brand_name=s.get("brand_name"),
+                category=s.get("category"),
+                message_count=s.get("message_count", 0),
+                current_state=s.get("current_state", "STATE_GREETING"),
+                created_at=s.get("created_at", ""),
+                updated_at=s.get("updated_at", ""),
+            )
+            for s in sessions
+        ]
+        
+        return success_response(
+            data=ChatSessionListResponse(
+                sessions=session_summaries,
+                total=len(session_summaries),
+            ),
+            message=f"Found {len(session_summaries)} chat sessions",
+        )
+        
+    except Exception as e:
+        app_logger.error(f"Failed to list chat sessions: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list chat sessions: {str(e)}",
+        )
+
+
+@router.get(
+    "/sessions/{session_id}",
+    response_model=SuccessResponse[ChatSessionDetailResponse],
+    summary="Get a chat session with all messages",
+)
+async def get_chat_session(
+    session_id: str,
+    user_id: str = Depends(require_auth),
+) -> SuccessResponse[ChatSessionDetailResponse]:
+    """Get a specific chat session with all its messages.
+
+    Use this to display the full conversation history when a user
+    selects a past chat to view or resume.
+    """
+    try:
+        # Validate UUID format
+        UUID(session_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid session ID format",
+        )
+
+    try:
+        from app.services.chat_persistence import get_chat_session_detail
+        
+        session = await get_chat_session_detail(session_id, user_id)
+        
+        if not session:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Chat session not found",
+            )
+        
+        messages = [
+            ChatMessageResponse(
+                id=str(m["id"]),
+                role=m["role"],
+                content=m["content"],
+                state_before=m.get("state_before"),
+                state_after=m.get("state_after"),
+                created_at=m.get("created_at", ""),
+            )
+            for m in session.get("messages", [])
+        ]
+        
+        return success_response(
+            data=ChatSessionDetailResponse(
+                id=str(session["id"]),
+                title=session.get("title"),
+                brand_name=session.get("brand_name"),
+                brief=session.get("brief"),
+                category=session.get("category"),
+                current_state=session.get("current_state", "STATE_GREETING"),
+                messages=messages,
+                created_at=session.get("created_at", ""),
+                updated_at=session.get("updated_at", ""),
+            ),
+            message="Chat session retrieved successfully",
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(f"Failed to get chat session: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get chat session: {str(e)}",
+        )
+
+
+@router.post(
+    "/sessions/{session_id}/resume",
+    response_model=SuccessResponse[ChatSessionDetailResponse],
+    summary="Resume a past chat session",
+)
+async def resume_chat_session(
+    session_id: str,
+    user_id: str = Depends(require_auth),
+) -> SuccessResponse[ChatSessionDetailResponse]:
+    """Resume a past chat session.
+
+    This endpoint:
+    1. Retrieves the session and all messages from the database
+    2. Restores the in-memory session state so the behavioral engine can continue
+    3. Returns the full session for the client to display
+
+    After calling this endpoint, the client can continue the conversation
+    by sending messages to /chat with the same session_id.
+    """
+    try:
+        # Validate UUID format
+        UUID(session_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid session ID format",
+        )
+
+    try:
+        from app.services.chat_persistence import restore_session_from_db
+        
+        session = await restore_session_from_db(session_id, user_id)
+        
+        if not session:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Chat session not found",
+            )
+        
+        messages = [
+            ChatMessageResponse(
+                id=str(m["id"]),
+                role=m["role"],
+                content=m["content"],
+                state_before=m.get("state_before"),
+                state_after=m.get("state_after"),
+                created_at=m.get("created_at", ""),
+            )
+            for m in session.get("messages", [])
+        ]
+        
+        app_logger.info(f"Resumed chat session {session_id} for user {user_id}")
+        
+        return success_response(
+            data=ChatSessionDetailResponse(
+                id=str(session["id"]),
+                title=session.get("title"),
+                brand_name=session.get("brand_name"),
+                brief=session.get("brief"),
+                category=session.get("category"),
+                current_state=session.get("current_state", "STATE_GREETING"),
+                messages=messages,
+                created_at=session.get("created_at", ""),
+                updated_at=session.get("updated_at", ""),
+            ),
+            message="Chat session resumed successfully. Continue by sending messages to /chat with this session_id.",
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(f"Failed to resume chat session: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to resume chat session: {str(e)}",
+        )
+
+
+@router.delete(
+    "/sessions/{session_id}",
+    response_model=SuccessResponse[dict],
+    summary="Delete a chat session",
+)
+async def delete_chat_session_endpoint(
+    session_id: str,
+    user_id: str = Depends(require_auth),
+) -> SuccessResponse[dict]:
+    """Delete a chat session and all its messages.
+
+    This permanently removes the conversation history.
+    """
+    try:
+        # Validate UUID format
+        UUID(session_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid session ID format",
+        )
+
+    try:
+        from app.services.chat_persistence import delete_chat_session
+        
+        deleted = await delete_chat_session(session_id, user_id)
+        
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Chat session not found",
+            )
+        
+        return success_response(
+            data={"deleted": True, "session_id": session_id},
+            message="Chat session deleted successfully",
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(f"Failed to delete chat session: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete chat session: {str(e)}",
+        )

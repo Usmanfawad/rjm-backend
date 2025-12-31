@@ -40,7 +40,7 @@ class Settings(BaseSettings):
 
     # Local auth fallback (dev only)
     LOCAL_AUTH_SECRET: str = "JWT_SECRET_KEY"
-    LOCAL_AUTH_TOKEN_EXP_SECONDS: int = 3600
+    LOCAL_AUTH_TOKEN_EXP_SECONDS: int = 14400  # 4 hours
 
     @computed_field
     @property

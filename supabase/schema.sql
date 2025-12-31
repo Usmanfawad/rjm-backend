@@ -126,6 +126,57 @@ CREATE TRIGGER update_rjm_documents_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
+-- Chat Sessions Table (MIRA conversations)
+-- ============================================
+CREATE TABLE IF NOT EXISTS chat_sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255),
+    brand_name VARCHAR(255),
+    brief TEXT,
+    category VARCHAR(100),
+    current_state VARCHAR(100) DEFAULT 'STATE_GREETING',
+    session_data TEXT,
+    message_count INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for chat_sessions
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_user_id ON chat_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_updated_at ON chat_sessions(updated_at);
+
+-- ============================================
+-- Chat Messages Table (individual messages)
+-- ============================================
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    session_id UUID REFERENCES chat_sessions(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    role VARCHAR(20) NOT NULL,
+    content TEXT NOT NULL,
+    state_before VARCHAR(100),
+    state_after VARCHAR(100),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for chat_messages
+CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages(session_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_user_id ON chat_messages(user_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON chat_messages(created_at);
+
+-- Enable RLS on chat tables
+ALTER TABLE chat_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+
+-- Apply trigger to chat_sessions table
+DROP TRIGGER IF EXISTS update_chat_sessions_updated_at ON chat_sessions;
+CREATE TRIGGER update_chat_sessions_updated_at
+    BEFORE UPDATE ON chat_sessions
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
 -- Verification Query
 -- ============================================
 -- Run this to verify tables were created:

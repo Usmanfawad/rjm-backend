@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import List
 
 from app.config.logger import app_logger
@@ -16,9 +17,18 @@ from app.services.rjm_ingredient_canon import (
     get_generational_description,
     infer_category as infer_ad_category,
     is_canon_persona,
+    is_persona_valid_for_category,
+    get_invalid_personas_for_category,
     get_persona_phylum,
     get_canonical_name,
     normalize_generational_name,
+    check_phylum_diversity,
+    diversify_by_phylum,
+    # Overlay detection and retrieval
+    detect_multicultural_lineage,
+    get_multicultural_expressions,
+    is_local_brief,
+    get_local_culture_segment,
 )
 from app.services.rjm_vector_store import (
     PINECONE_NAMESPACE,
@@ -67,10 +77,25 @@ Given only a brand name and brief, you must return ONE RJM Persona Program as st
 
 Detected advertising category: {inferred_category}
 
-CRITICAL: You MUST return EXACTLY 15 personas in the "personas" array. Not 3, not 4, not 5 — FIFTEEN (15) personas.
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL CATEGORY CONSTRAINT - READ CAREFULLY
+═══════════════════════════════════════════════════════════════════════════════
 
-Category-first selector — SELECT 15 PERSONAS FROM THIS LIST:
+You MUST select personas ONLY from the category-specific pool below.
+This is the PRIMARY SELECTOR from RJM Ingredient Canon 11.26.25.
+
+FORBIDDEN: Using personas from other categories. For example:
+- "Budget-Minded", "Bargain Hunter", "Savvy Shopper" are CPG/Retail personas - DO NOT use for Luxury & Fashion
+- "Luxury Insider", "Glam Life" are Luxury personas - DO NOT use for QSR
+
+ANY PERSONA NOT IN THE LIST BELOW WILL BE REJECTED.
+
+Category-first selector — SELECT EXACTLY 15 PERSONAS FROM THIS LIST ONLY:
 {category_persona_text}
+
+═══════════════════════════════════════════════════════════════════════════════
+
+CRITICAL: You MUST return EXACTLY 15 personas in the "personas" array. Not 3, not 4, not 5 — FIFTEEN (15) personas.
 
 Category anchors (DO NOT include in personas array — these are added separately): {category_anchor_text}
 
@@ -269,56 +294,108 @@ def generate_program_with_rag(request: GenerateProgramRequest) -> ProgramJSON:
     # Always enforce canonical Activation Plan language regardless of model output
     activation_plan = ACTIVATION_PLAN_CANON
 
-    # Validate personas against canon (filter out invented names, but trust LLM's selection)
+    # Validate personas against CATEGORY-SPECIFIC pool (PRIMARY SELECTOR from Ingredient Canon)
+    # This is critical: personas MUST be valid for the detected category
     valid_personas: List[Persona] = []
+    rejected_personas: List[str] = []
     seen_names: set[str] = set()
-    
+
     # Build set of anchor names to skip (LLM sometimes puts anchors in personas array)
     anchor_names = set(ALL_ANCHORS)
-    
-    app_logger.info(f"Processing {len(personas_raw)} personas from LLM response")
-    
+
+    app_logger.info(f"Processing {len(personas_raw)} personas from LLM response for category: {inferred_category}")
+
     for p in personas_raw:
         name = p.get("name")
         if not name:
             continue
-        
+
         # Skip anchors that LLM mistakenly put in personas array
         if name in anchor_names or name.startswith("RJM "):
             app_logger.debug(f"Skipping anchor in personas array: {name}")
             continue
-        
+
         # Skip generational segments in the core persona list
         if name in ALL_GENERATIONAL_NAMES:
             app_logger.debug(f"Skipping generational segment in personas array: {name}")
             continue
-        
+
         # Get canonical name (handles variations like "Budget-Minded" vs "Budget Minded")
         canonical_name = get_canonical_name(name)
-        
-        if not is_canon_persona(canonical_name):
-            # Log but don't skip - try the original name too
-            app_logger.warning(f"Persona '{name}' not found in canon (canonical: '{canonical_name}')")
-            # Try the original name as-is
-            if is_canon_persona(name):
-                canonical_name = name
-            else:
+
+        # CRITICAL: Check if persona is VALID FOR THIS CATEGORY (not just canon)
+        # This enforces the Category → Persona Map as PRIMARY SELECTOR
+        if not is_persona_valid_for_category(canonical_name, inferred_category):
+            # Also try the original name
+            if not is_persona_valid_for_category(name, inferred_category):
+                rejected_personas.append(name)
+                app_logger.warning(
+                    f"REJECTED persona '{name}' - not valid for category '{inferred_category}'. "
+                    f"Category personas: {category_personas[:10]}..."
+                )
                 continue
-        
+            else:
+                canonical_name = name
+
         if canonical_name in seen_names:
             continue
-        
+
         seen_names.add(canonical_name)
         valid_personas.append(
             Persona(
                 name=canonical_name,
-                category=p.get("category"),
+                category=p.get("category") or inferred_category,
                 phylum=get_persona_phylum(canonical_name),
                 highlight=p.get("highlight"),
             )
         )
-    
-    app_logger.info(f"Validated {len(valid_personas)} personas from LLM response")
+
+    app_logger.info(
+        f"Category validation: {len(valid_personas)} valid, {len(rejected_personas)} rejected. "
+        f"Rejected: {rejected_personas[:5]}"
+    )
+
+    # Check phylum diversity (SECONDARY SELECTOR from Ingredient Canon)
+    # Ensures cultural texture and prevents over-clustering in one phylum
+    is_diverse, phylum_counts = check_phylum_diversity(
+        [p.name for p in valid_personas],
+        min_phyla=3,
+        max_dominance=0.35
+    )
+    if not is_diverse and len(valid_personas) > 0:
+        app_logger.warning(
+            f"Phylum diversity issue detected: {phylum_counts}. "
+            f"Adding diversity from category pool."
+        )
+        # Get names for diversification
+        current_names = [p.name for p in valid_personas]
+        # Diversify using category-valid personas only
+        diversified_names = diversify_by_phylum(
+            current=current_names,
+            pool=[n for n in category_personas if n not in seen_names],
+            target_count=15,
+            min_phyla=3,
+            max_dominance=0.35
+        )
+        # Add any new personas from diversification
+        for name in diversified_names:
+            if name not in seen_names and is_persona_valid_for_category(name, inferred_category):
+                seen_names.add(name)
+                valid_personas.append(
+                    Persona(
+                        name=name,
+                        category=inferred_category,
+                        phylum=get_persona_phylum(name),
+                        highlight=None,
+                    )
+                )
+        # Re-check diversity after enrichment
+        is_diverse, phylum_counts = check_phylum_diversity(
+            [p.name for p in valid_personas],
+            min_phyla=3,
+            max_dominance=0.35
+        )
+        app_logger.info(f"After diversity enrichment: {len(valid_personas)} personas, phyla={phylum_counts}")
 
     # Validate generational segments (trust LLM's selection, just validate they exist)
     # Handle both old format (list of strings) and new format (list of objects with name/highlight)
@@ -340,15 +417,31 @@ def generate_program_with_rag(request: GenerateProgramRequest) -> ProgramJSON:
         elif name and not canonical_gen_name:
             app_logger.warning(f"Skipping unrecognized generational segment: {name}")
     
-    # BACKFILL ONLY: If LLM didn't return enough generational segments
-    if len(valid_generational) < 4:
-        app_logger.info(f"Backfilling generational segments (LLM returned {len(valid_generational)})")
-        for cohort, segments in GENERATIONS_BY_COHORT.items():
-            if len(valid_generational) >= 4:
-                break
-            has_cohort = any(g["name"].startswith(cohort) for g in valid_generational)
-            if not has_cohort and segments:
+    # MANDATORY: Ensure ALL 4 generational cohorts are represented (per Ingredient Canon)
+    # Every program MUST include one from each: Gen Z, Millennial, Gen X, Boomer
+    cohorts_present = set()
+    for g in valid_generational:
+        gen_name = g["name"]
+        if gen_name.startswith("Gen Z"):
+            cohorts_present.add("Gen Z")
+        elif gen_name.startswith("Millennial"):
+            cohorts_present.add("Millennial")
+        elif gen_name.startswith("Gen X"):
+            cohorts_present.add("Gen X")
+        elif gen_name.startswith("Boomer"):
+            cohorts_present.add("Boomer")
+
+    missing_cohorts = set(GENERATIONS_BY_COHORT.keys()) - cohorts_present
+    if missing_cohorts:
+        app_logger.info(f"Backfilling missing generational cohorts: {missing_cohorts}")
+        for cohort in missing_cohorts:
+            segments = GENERATIONS_BY_COHORT.get(cohort, [])
+            if segments:
+                # Pick first segment from this cohort
                 valid_generational.append({"name": segments[0], "highlight": ""})
+
+    # Cap at 4 generational segments (one per cohort)
+    valid_generational = valid_generational[:4]
     
     # BACKFILL: If any generational segment has empty highlight, create one from description
     for seg in valid_generational:
@@ -365,28 +458,40 @@ def generate_program_with_rag(request: GenerateProgramRequest) -> ProgramJSON:
                 seg["highlight"] = " ".join(words).rstrip(".,;—") + "."
 
     # BACKFILL ONLY: If LLM didn't return enough personas, add from category pool
+    # Using category-specific personas ONLY (enforcing PRIMARY SELECTOR)
     if len(valid_personas) < 6:
         app_logger.warning(
-            f"Model returned only {len(valid_personas)} valid canon personas; backfilling from category pool"
+            f"Model returned only {len(valid_personas)} valid personas; backfilling from category pool"
         )
-        # Get personas from the detected category to backfill
-        for persona_name in category_personas:
+        # Use diversify_by_phylum to add personas while maintaining diversity
+        current_names = [p.name for p in valid_personas]
+        backfill_pool = [
+            n for n in category_personas
+            if n not in seen_names
+            and n not in ALL_GENERATIONAL_NAMES
+            and is_persona_valid_for_category(n, inferred_category)
+        ]
+        diversified_names = diversify_by_phylum(
+            current=current_names,
+            pool=backfill_pool,
+            target_count=15,
+            min_phyla=3,
+            max_dominance=0.35
+        )
+        for persona_name in diversified_names:
             if len(valid_personas) >= 15:
                 break
             if persona_name in seen_names:
                 continue
-            if persona_name in ALL_GENERATIONAL_NAMES:
-                continue
-            if is_canon_persona(persona_name):
-                seen_names.add(persona_name)
-                valid_personas.append(
-                    Persona(
-                        name=persona_name,
-                        category=inferred_category,
-                        phylum=get_persona_phylum(persona_name),
-                        highlight=None,
-                    )
+            seen_names.add(persona_name)
+            valid_personas.append(
+                Persona(
+                    name=persona_name,
+                    category=inferred_category,
+                    phylum=get_persona_phylum(persona_name),
+                    highlight=None,
                 )
+            )
         app_logger.info(f"After backfill: {len(valid_personas)} personas")
 
     # Use LLM's persona insights directly (trust the LLM's percentages and content)
@@ -424,12 +529,42 @@ def generate_program_with_rag(request: GenerateProgramRequest) -> ProgramJSON:
         for g in valid_generational[:4]
     ]
 
+    # ═══════════════════════════════════════════════════════════════════════════
+    # CONTEXTUAL OVERLAYS (from Ingredient Canon Section IV)
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    # A. Multicultural Expressions - only when brief requires multicultural targeting
+    multicultural_overlays: List[str] = []
+    detected_lineage = detect_multicultural_lineage(request.brief)
+    if detected_lineage:
+        multicultural_overlays = get_multicultural_expressions(detected_lineage)[:5]
+        app_logger.info(f"Multicultural overlay detected: {detected_lineage} -> {multicultural_overlays}")
+
+    # B. Local Culture Segments - only for geo-targeted campaigns
+    local_culture_overlays: List[str] = []
+    if is_local_brief(request.brief):
+        # Try to extract specific DMA from brief
+        # For now, we note it's geo-targeted and the user can specify DMAs later
+        app_logger.info("Local/geo-targeted brief detected - Local Culture segments applicable")
+        # Extract potential city/region mentions for segment matching
+        city_pattern = r'\b(new york|los angeles|chicago|houston|phoenix|philadelphia|san antonio|san diego|dallas|austin|miami|atlanta|seattle|denver|boston|nashville|portland|las vegas|detroit|minneapolis|charlotte)\b'
+        matches = re.findall(city_pattern, request.brief.lower())
+        for city in matches[:5]:  # Max 5 local segments
+            segment = get_local_culture_segment(city)
+            if segment and segment not in local_culture_overlays:
+                local_culture_overlays.append(segment)
+        if local_culture_overlays:
+            app_logger.info(f"Local Culture segments added: {local_culture_overlays}")
+
     return ProgramJSON(
         header=header,
         advertising_category=advertising_category,
         key_identifiers=list(key_identifiers),
         personas=valid_personas,
         generational_segments=generational_segment_objects,
+        category_anchors=category_anchors,
+        multicultural_expressions=multicultural_overlays,
+        local_culture_segments=local_culture_overlays,
         persona_insights=list(persona_insights),
         demos=normalized_demos,
         activation_plan=list(activation_plan),
