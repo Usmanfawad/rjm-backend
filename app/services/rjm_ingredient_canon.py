@@ -10,14 +10,352 @@ This module consolidates all product reference points:
   - Generations (32)
   - Multicultural Expressions (30)
   - Local Culture DMA Segments (125)
+
+PHASE 1 FIXES (per Jesse's feedback):
+1. Default persona gravity - rotation pressure / anti-repeat logic
+2. Persona Highlights vs Insights - HARD SEPARATION enforced
+3. Sunset personas - strict allowlist, no deprecated personas
+4. Ad-category anchor segments - reinstated in portfolio
+5. Category edge cases - override logic for multi-category brands
 """
 
 from __future__ import annotations
 
+import random
 from collections import deque
 from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 from app.config.logger import app_logger
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# SUNSET / DEPRECATED PERSONAS (STRICT ALLOWLIST ENFORCEMENT)
+# These personas are NO LONGER part of the active ingredient canon.
+# They MUST NOT appear in any generated programs.
+# ════════════════════════════════════════════════════════════════════════════
+
+DEPRECATED_PERSONAS: Set[str] = {
+    # Legacy personas retired from canon
+    "Culture Maven",  # Replaced by Culture Connoisseur
+    "Money Mover",    # Consolidated into Power Broker
+    "Cash Flow",      # Consolidated into Power Broker
+    "Wellness Warrior",  # Replaced by Biohacker / Gym Obsessed
+    "Health Nut",     # Replaced by Clean Eats
+    "Fitness Fanatic",  # Replaced by Gym Obsessed
+    "Tech Savant",    # Replaced by Techie / Innovator
+    "Digital Native", # Too generic, use specific personas
+    "Eco Warrior",    # Replaced by Green Pioneer
+    "Social Climber", # Retired
+    "Trend Spotter",  # Consolidated into Hype Seeker
+    "Brand Loyalist", # Retired - too generic
+    "Impulse Spender",  # Consolidated into Impulse Buyer
+    "Deal Seeker",    # Consolidated into Bargain Hunter
+    "Coupon Clipper", # Consolidated into Savvy Shopper
+    "Soccer Mom",     # Retired - use Sports Parent
+    "Busy Mom",       # Retired - use Single Parent / Caregiver
+    "Working Mom",    # Retired - use Single Parent
+    "Daddy Daycare",  # Retired - use Single Parent
+    "Adventure Seeker",  # Consolidated into Adrenaline Junkie
+    "Thrill Seeker",  # Consolidated into Adrenaline Junkie
+    "Party Animal",   # Retired
+    "Night Crawler",  # Consolidated into Night Owl
+    "Fashion Forward",  # Consolidated into Fast Fashionista
+    "Style Maven",    # Consolidated into Stylista
+    "Wine Snob",      # Consolidated into Sideways
+    "Beer Connoisseur",  # Consolidated into Beer League
+    "Coffee Addict",  # Consolidated into Caffeine Fiend
+    "Foodie",         # Too generic - use Chef / Bourdain Mode / Michelin Chaser
+    "Music Lover",    # Too generic - use specific music phyla
+    "Sports Fan",     # Too generic - use specific sports personas
+    "Car Enthusiast", # Consolidated into Revved / Fast Lane
+    "Pet Parent",     # Consolidated into Dog Parent / Cat Person / Pawrent
+    "Animal Lover",   # Consolidated into Rescuer
+}
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# CATEGORY EDGE CASES — Override Logic for Multi-Category Brands
+# Explicit mappings for brands that span categories (Phase 1 Fix #5)
+# ════════════════════════════════════════════════════════════════════════════
+
+BRAND_CATEGORY_OVERRIDES: Dict[str, str] = {
+    # Grocery/Supermarket - primary category by business model
+    "whole foods": "Retail & E-Commerce",
+    "whole foods market": "Retail & E-Commerce",
+    "trader joe's": "Retail & E-Commerce",
+    "trader joes": "Retail & E-Commerce",
+    "kroger": "Retail & E-Commerce",
+    "safeway": "Retail & E-Commerce",
+    "publix": "Retail & E-Commerce",
+    "wegmans": "Retail & E-Commerce",
+    "aldi": "Retail & E-Commerce",
+    "costco": "Retail & E-Commerce",
+    "sam's club": "Retail & E-Commerce",
+    
+    # QSR-primary (even if they have dining elements)
+    "dunkin": "QSR",
+    "dunkin'": "QSR",
+    "dunkin donuts": "QSR",
+    "mcdonald's": "QSR",
+    "mcdonalds": "QSR",
+    "burger king": "QSR",
+    "wendy's": "QSR",
+    "wendys": "QSR",
+    "taco bell": "QSR",
+    "chick-fil-a": "QSR",
+    "chick fil a": "QSR",
+    "chipotle": "QSR",
+    "five guys": "QSR",
+    "in-n-out": "QSR",
+    "in n out": "QSR",
+    "shake shack": "QSR",
+    "panda express": "QSR",
+    "popeyes": "QSR",
+    "kfc": "QSR",
+    "subway": "QSR",
+    "domino's": "QSR",
+    "dominos": "QSR",
+    "pizza hut": "QSR",
+    "papa john's": "QSR",
+    "papa johns": "QSR",
+    "sonic": "QSR",
+    "jack in the box": "QSR",
+    "carl's jr": "QSR",
+    "hardee's": "QSR",
+    "arby's": "QSR",
+    "arbys": "QSR",
+    "white castle": "QSR",
+    "whataburger": "QSR",
+    "wingstop": "QSR",
+    "buffalo wild wings": "QSR",
+    "jersey mike's": "QSR",
+    "jimmy john's": "QSR",
+    "firehouse subs": "QSR",
+    
+    # Culinary & Dining (sit-down experience is primary)
+    "starbucks": "Culinary & Dining",
+    "olive garden": "Culinary & Dining",
+    "applebee's": "Culinary & Dining",
+    "applebees": "Culinary & Dining",
+    "chili's": "Culinary & Dining",
+    "chilis": "Culinary & Dining",
+    "outback steakhouse": "Culinary & Dining",
+    "outback": "Culinary & Dining",
+    "red lobster": "Culinary & Dining",
+    "texas roadhouse": "Culinary & Dining",
+    "longhorn steakhouse": "Culinary & Dining",
+    "cracker barrel": "Culinary & Dining",
+    "cheesecake factory": "Culinary & Dining",
+    "p.f. chang's": "Culinary & Dining",
+    "pf changs": "Culinary & Dining",
+    "ihop": "Culinary & Dining",
+    "denny's": "Culinary & Dining",
+    "dennys": "Culinary & Dining",
+    "waffle house": "Culinary & Dining",
+    "panera bread": "Culinary & Dining",
+    "panera": "Culinary & Dining",
+    "noodles & company": "Culinary & Dining",
+    "sweetgreen": "Culinary & Dining",
+    "cava": "Culinary & Dining",
+    "hillstone": "Culinary & Dining",
+    "first watch": "Culinary & Dining",
+    
+    # Coffee shops (Culinary experience)
+    "peet's coffee": "Culinary & Dining",
+    "peets": "Culinary & Dining",
+    "blue bottle": "Culinary & Dining",
+    "blue bottle coffee": "Culinary & Dining",
+    "philz coffee": "Culinary & Dining",
+    "intelligentsia": "Culinary & Dining",
+    "la colombe": "Culinary & Dining",
+    "counter culture": "Culinary & Dining",
+    
+    # Luxury brands (ensure proper categorization)
+    "fendi": "Luxury & Fashion",
+    "gucci": "Luxury & Fashion",
+    "louis vuitton": "Luxury & Fashion",
+    "lv": "Luxury & Fashion",
+    "chanel": "Luxury & Fashion",
+    "prada": "Luxury & Fashion",
+    "dior": "Luxury & Fashion",
+    "hermes": "Luxury & Fashion",
+    "hermès": "Luxury & Fashion",
+    "burberry": "Luxury & Fashion",
+    "versace": "Luxury & Fashion",
+    "balenciaga": "Luxury & Fashion",
+    "bottega veneta": "Luxury & Fashion",
+    "saint laurent": "Luxury & Fashion",
+    "ysl": "Luxury & Fashion",
+    "valentino": "Luxury & Fashion",
+    "armani": "Luxury & Fashion",
+    "givenchy": "Luxury & Fashion",
+    "celine": "Luxury & Fashion",
+    "loewe": "Luxury & Fashion",
+    "miu miu": "Luxury & Fashion",
+    "tiffany": "Luxury & Fashion",
+    "tiffany & co": "Luxury & Fashion",
+    "cartier": "Luxury & Fashion",
+    "rolex": "Luxury & Fashion",
+    "omega": "Luxury & Fashion",
+    "patek philippe": "Luxury & Fashion",
+    "sephora": "Luxury & Fashion",
+    "ulta": "Luxury & Fashion",
+    "nordstrom": "Luxury & Fashion",
+    "neiman marcus": "Luxury & Fashion",
+    "saks fifth avenue": "Luxury & Fashion",
+    "saks": "Luxury & Fashion",
+    "bloomingdale's": "Luxury & Fashion",
+    "bloomingdales": "Luxury & Fashion",
+    "bergdorf goodman": "Luxury & Fashion",
+    
+    # Telecom/Wireless (Tech & Wireless even if they sell devices)
+    "verizon": "Tech & Wireless",
+    "at&t": "Tech & Wireless",
+    "att": "Tech & Wireless",
+    "t-mobile": "Tech & Wireless",
+    "tmobile": "Tech & Wireless",
+    "sprint": "Tech & Wireless",
+    "xfinity": "Tech & Wireless",
+    "comcast": "Tech & Wireless",
+    "spectrum": "Tech & Wireless",
+    "cox": "Tech & Wireless",
+    
+    # Fitness brands
+    "peloton": "Sports & Fitness",
+    "equinox": "Sports & Fitness",
+    "orangetheory": "Sports & Fitness",
+    "planet fitness": "Sports & Fitness",
+    "la fitness": "Sports & Fitness",
+    "24 hour fitness": "Sports & Fitness",
+    "crossfit": "Sports & Fitness",
+    "soulcycle": "Sports & Fitness",
+    "barry's": "Sports & Fitness",
+    "f45": "Sports & Fitness",
+    
+    # Athletic brands (dual Sports & Retail)
+    "nike": "Sports & Fitness",
+    "adidas": "Sports & Fitness",
+    "under armour": "Sports & Fitness",
+    "lululemon": "Sports & Fitness",
+    "new balance": "Sports & Fitness",
+    "puma": "Sports & Fitness",
+    "reebok": "Sports & Fitness",
+    "asics": "Sports & Fitness",
+    "brooks": "Sports & Fitness",
+    
+    # Alcohol brands
+    "budweiser": "Alcohol & Spirits",
+    "bud light": "Alcohol & Spirits",
+    "miller lite": "Alcohol & Spirits",
+    "coors": "Alcohol & Spirits",
+    "corona": "Alcohol & Spirits",
+    "heineken": "Alcohol & Spirits",
+    "stella artois": "Alcohol & Spirits",
+    "guinness": "Alcohol & Spirits",
+    "jack daniels": "Alcohol & Spirits",
+    "jack daniel's": "Alcohol & Spirits",
+    "johnnie walker": "Alcohol & Spirits",
+    "jameson": "Alcohol & Spirits",
+    "grey goose": "Alcohol & Spirits",
+    "absolut": "Alcohol & Spirits",
+    "smirnoff": "Alcohol & Spirits",
+    "patron": "Alcohol & Spirits",
+    "don julio": "Alcohol & Spirits",
+    "casamigos": "Alcohol & Spirits",
+    "white claw": "Alcohol & Spirits",
+    "truly": "Alcohol & Spirits",
+}
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# HOT PERSONAS — High-Frequency Personas Needing Rotation Pressure
+# These personas are "default" selections that appear too often.
+# Apply rotation pressure to ensure diversity.
+# ════════════════════════════════════════════════════════════════════════════
+
+# Per-category "hot" personas that need rotation pressure (Phase 1 Fix #1)
+CATEGORY_HOT_PERSONAS: Dict[str, Set[str]] = {
+    "Travel & Hospitality": {
+        "Romantic Voyager", "Retreat Seeker", "Island Hopper",
+    },
+    "Luxury & Fashion": {
+        "Closet Runway", "Fast Fashionista", "Couture Curator",
+    },
+    "CPG": {
+        "Budget-Minded", "Savvy Shopper", "Bargain Hunter",
+    },
+    "QSR": {
+        "Takeout Guru", "Food Truckin'", "Caffeine Fiend",
+    },
+    "Retail & E-Commerce": {
+        "Bargain Hunter", "Budget-Minded", "Savvy Shopper", "Impulse Buyer",
+    },
+    "Finance & Insurance": {
+        "Power Broker", "Planner", "Legacy",
+    },
+    "Tech & Wireless": {
+        "Techie", "Digital Nomad", "Gamer",
+    },
+    "Entertainment": {
+        "Binge Watcher", "Creator", "Gamer",
+    },
+    "Sports & Fitness": {
+        "Gym Obsessed", "Weekend Warrior", "Sports Parent",
+    },
+    "Culinary & Dining": {
+        "Chef", "Bourdain Mode", "Foodie",
+    },
+    "Health & Pharma": {
+        "Self-Love", "Biohacker", "Gym Obsessed",
+    },
+    "Auto": {
+        "Road Trip", "Weekend Warrior", "Fast Lane",
+    },
+    "Home & DIY": {
+        "Fixer", "Modern Tradesman", "Design Maven",
+    },
+    "Alcohol & Spirits": {
+        "Nightcapper", "Social Butterfly", "Night Owl",
+    },
+}
+
+
+def is_hot_persona(name: str, category: str) -> bool:
+    """Check if a persona is a 'hot' persona for the given category.
+    
+    Hot personas are frequently selected and need rotation pressure.
+    """
+    hot_set = CATEGORY_HOT_PERSONAS.get(category, set())
+    return name in hot_set
+
+
+def get_rotation_weight(name: str, category: str, recency_position: int = -1) -> float:
+    """Calculate rotation weight for a persona (lower = less likely to be selected).
+    
+    Args:
+        name: Persona name
+        category: Advertising category
+        recency_position: Position in recent usage queue (-1 if not recent)
+    
+    Returns:
+        Weight between 0.1 (strongly suppress) and 1.0 (no suppression)
+    """
+    weight = 1.0
+    
+    # Hot persona penalty
+    if is_hot_persona(name, category):
+        weight *= 0.6  # 40% penalty for being a "hot" persona
+    
+    # Recency penalty (if recently used)
+    if recency_position >= 0:
+        if recency_position < 20:  # Very recently used
+            weight *= 0.3
+        elif recency_position < 50:  # Moderately recent
+            weight *= 0.5
+        elif recency_position < 100:  # Somewhat recent
+            weight *= 0.7
+    
+    return max(0.1, weight)  # Never go below 0.1
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -520,13 +858,29 @@ CATEGORY_KEYWORDS: Dict[str, Sequence[str]] = {
     # "Luxury & Fashion" must come before "Retail & E-Commerce" so "luxury fashion" matches correctly.
     "Luxury & Fashion": ["luxury", "luxe", "couture", "runway", "glam", "designer", "high-end", "premium fashion", "upscale fashion", "fashion brand", "flagship store", "beauty", "cosmetics", "skincare", "makeup", "l'oréal", "loreal", "elegance", "elegant"],
     "Retail & E-Commerce": ["retail", "apparel", "shopping", "store", "threads", "e-commerce", "boutique", "mall", "outlet"],
-    "Auto": ["auto", "automotive", "suv", "car", "truck", "motors", "dealership", "vehicle"],
-    "Finance & Insurance": ["bank", "finance", "insurance", "credit", "loan", "mortgage", "wealth", "investment"],
+    # Finance MUST come before Auto to avoid "auto-pay", "auto loan" matching Auto category
+    "Finance & Insurance": [
+        "bank", "banking", "finance", "financial", "insurance", "credit", "credit card", "loan", "mortgage",
+        "wealth", "investment", "fintech", "payments", "pay", "synchrony", "capital one", "chase", "wells fargo",
+        "american express", "amex", "visa", "mastercard", "discover", "citibank", "citi",
+    ],
+    "Auto": ["automotive", "suv", "car ", "cars", "truck", "motors", "dealership", "vehicle", "ford", "toyota", "honda", "chevrolet", "bmw", "mercedes", "audi"],
     "Health & Pharma": ["health", "wellness", "pharma", "fitness", "care", "medical", "vitamin"],
     "Tech & Wireless": ["tech", "wireless", "mobile", "software", "hardware", "device", "app", "digital"],
     "Travel & Hospitality": ["travel", "hotel", "hospitality", "vacation", "tourism", "resort", "airline"],
     "Sports & Fitness": ["sports", "fitness", "athletic", "athlete", "gym", "workout"],
-    "CPG": ["cpg", "consumer packaged", "grocery", "household", "cleaning", "personal care"],
+    "CPG": [
+        "cpg", "consumer packaged", "grocery", "household", "cleaning", "personal care",
+        "beverage", "beverages", "drink", "drinks", "sparkling water", "mineral water", "soda", "soft drink",
+        "topo chico", "lacroix", "perrier", "pellegrino", "san pellegrino", "coca-cola", "coca cola", "coke",
+        "pepsi", "dr pepper", "sprite", "fanta", "mountain dew", "gatorade", "powerade", "vitaminwater",
+        "body armor", "bodyarmor", "celsius", "red bull", "monster energy", "bang energy", "prime",
+        "juice", "lemonade", "tea", "iced tea", "kombucha", "energy drink", "sports drink",
+        "snack", "snacks", "chips", "crackers", "cookies", "candy", "chocolate", "gum",
+        "cereal", "breakfast", "yogurt", "milk", "dairy", "cheese", "butter",
+        "soap", "shampoo", "conditioner", "lotion", "deodorant", "toothpaste", "detergent", "laundry",
+        "paper towel", "tissue", "toilet paper", "trash bags", "food", "frozen", "canned",
+    ],
     "Home & DIY": ["home", "diy", "renovation", "furniture", "garden", "improvement"],
     "Alcohol & Spirits": ["spirits", "alcohol", "brew", "distillery", "cocktail", "beer", "wine", "whiskey"],
     "Entertainment": ["entertainment", "streaming", "media", "music", "film", "movie", "tv", "show"],
@@ -554,12 +908,119 @@ DUAL_ANCHOR_BRANDS: Dict[str, List[str]] = {
 
 
 def infer_category(text: str) -> str:
-    """Infer primary advertising category using keyword heuristics."""
+    """Infer primary advertising category using keyword heuristics.
+    
+    DEPRECATED: Use infer_category_with_llm() for accurate category detection.
+    This function is kept for backward compatibility but should not be relied upon
+    for production category detection.
+    """
     lowered = text.lower()
     for category, keywords in CATEGORY_KEYWORDS.items():
         if any(keyword in lowered for keyword in keywords):
             return category
     return "CPG"  # Default fallback
+
+
+def infer_category_with_llm(brand_name: str, brief: str) -> str:
+    """
+    Use LLM to accurately detect the advertising category for a brand.
+    
+    This is the PRIMARY method for category detection. The LLM understands
+    brand context and can correctly identify categories for well-known brands
+    like Starbucks (Culinary & Dining), Fendi (Luxury & Fashion), 
+    Verizon (Tech & Wireless), etc.
+    
+    PHASE 1 FIX #5: Uses BRAND_CATEGORY_OVERRIDES first for known edge cases
+    like Whole Foods (Retail), Dunkin' (QSR), etc.
+    
+    Args:
+        brand_name: The brand name (e.g., "Starbucks", "Fendi", "Verizon")
+        brief: The campaign brief or context
+        
+    Returns:
+        One of the 15 canonical RJM advertising categories
+    """
+    from app.config.settings import settings
+    from app.services.rjm_vector_store import get_openai_client
+    
+    # PHASE 1 FIX #5: Check brand category overrides FIRST
+    brand_lower = brand_name.lower().strip()
+    if brand_lower in BRAND_CATEGORY_OVERRIDES:
+        override_category = BRAND_CATEGORY_OVERRIDES[brand_lower]
+        app_logger.info(f"Category override applied: '{brand_name}' -> '{override_category}'")
+        return override_category
+    
+    # Get the canonical category list
+    valid_categories = list(CATEGORY_PERSONA_MAP.keys())
+    categories_list = "\n".join(f"- {cat}" for cat in valid_categories)
+    
+    # Build the LLM prompt
+    system_prompt = f"""You are an advertising category classifier. Your job is to determine the correct advertising category for a brand.
+
+VALID CATEGORIES (choose exactly one):
+{categories_list}
+
+IMPORTANT CATEGORY GUIDANCE:
+- Culinary & Dining: Coffee shops, restaurants, cafes, food service (Starbucks, Hillstone, Chipotle)
+- QSR: Fast food, quick service restaurants (McDonald's, Burger King, Wendy's)
+- Luxury & Fashion: High-end fashion, luxury goods, designer brands (Fendi, Gucci, Louis Vuitton, Chanel)
+- Tech & Wireless: Telecom, mobile carriers, technology companies (Verizon, AT&T, T-Mobile, Apple, Samsung)
+- Sports & Fitness: Fitness equipment, athletic brands, gyms (Peloton, Nike, Adidas, Equinox)
+- Finance & Insurance: Banks, credit cards, insurance companies (Chase, Amex, State Farm)
+- Auto: Car manufacturers, dealerships (Ford, Toyota, BMW)
+- Entertainment: Streaming, media, entertainment companies (Netflix, Disney, Spotify)
+- Travel & Hospitality: Hotels, airlines, travel services (Marriott, Delta, Airbnb)
+- Retail & E-Commerce: General retail stores, e-commerce (Target, Amazon, Walmart)
+- Health & Pharma: Healthcare, pharmaceuticals, wellness brands
+- Home & DIY: Home improvement, furniture, home goods
+- Alcohol & Spirits: Beer, wine, spirits brands
+- CPG: Consumer packaged goods, grocery items, household products (Tide, Clorox, Kraft)
+- B2B & Professional Services: Enterprise software, consulting, business services
+
+RESPOND WITH ONLY THE CATEGORY NAME, nothing else."""
+
+    user_prompt = f"""Brand: {brand_name}
+Brief: {brief}
+
+What is the correct advertising category for this brand?"""
+
+    try:
+        client = get_openai_client()
+        completion = client.chat.completions.create(
+            model=settings.OPENAI_MODEL,
+            temperature=0,  # Deterministic for consistency
+            max_tokens=50,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+        )
+        
+        response = completion.choices[0].message.content.strip()
+        
+        # Validate the response is a valid category
+        for category in valid_categories:
+            if category.lower() == response.lower() or category.lower() in response.lower():
+                app_logger.info(f"LLM category detection: '{brand_name}' -> '{category}'")
+                return category
+        
+        # If no exact match, try to find the best match
+        response_lower = response.lower()
+        for category in valid_categories:
+            # Check if category name appears in response
+            cat_lower = category.lower()
+            if cat_lower in response_lower:
+                app_logger.info(f"LLM category detection (partial match): '{brand_name}' -> '{category}'")
+                return category
+        
+        # Fallback to keyword-based if LLM response is unexpected
+        app_logger.warning(f"LLM returned unexpected category '{response}' for brand '{brand_name}', falling back to keyword detection")
+        return infer_category(f"{brand_name} {brief}")
+        
+    except Exception as exc:
+        app_logger.error(f"LLM category detection failed for '{brand_name}': {exc}")
+        # Fallback to keyword-based detection
+        return infer_category(f"{brand_name} {brief}")
 
 
 def get_brand_categories(brand_name: str) -> List[str]:
@@ -705,15 +1166,31 @@ for _category_personas in CATEGORY_PERSONA_MAP.values():
 
 
 def is_canon_persona(name: str) -> bool:
-    """Check if a persona name is in the canon (handles name variations)."""
+    """Check if a persona name is in the canon (handles name variations).
+    
+    PHASE 1 FIX #3: Also rejects deprecated/sunset personas.
+    The canon acts as a STRICT ALLOWLIST - only active personas are valid.
+    """
     if not name:
         return False
+    
+    # PHASE 1 FIX #3: Check if persona is deprecated
+    if name in DEPRECATED_PERSONAS:
+        app_logger.debug(f"Rejected deprecated persona: {name}")
+        return False
+    
+    # Also check normalized form against deprecated list
+    normalized = _normalize_persona_name(name)
+    for deprecated in DEPRECATED_PERSONAS:
+        if _normalize_persona_name(deprecated).lower() == normalized.lower():
+            app_logger.debug(f"Rejected deprecated persona (normalized match): {name}")
+            return False
+    
     # Direct match
     if name in _ALL_CANON_PERSONAS:
         return True
     # Try normalized matching
-    normalized = _normalize_persona_name(name).lower()
-    return normalized in _NORMALIZED_CANON_MAP
+    return normalized.lower() in _NORMALIZED_CANON_MAP
 
 
 def get_canonical_name(name: str) -> str:
@@ -948,6 +1425,168 @@ def diversify_by_phylum(
     return result
 
 
+# ════════════════════════════════════════════════════════════════════════════
+# PHASE 1 ENFORCEMENT FUNCTIONS
+# ════════════════════════════════════════════════════════════════════════════
+
+def is_deprecated_persona(name: str) -> bool:
+    """Check if a persona is deprecated/sunset (Phase 1 Fix #3).
+    
+    Deprecated personas MUST NOT appear in any generated programs.
+    """
+    if name in DEPRECATED_PERSONAS:
+        return True
+    # Also check normalized form
+    normalized = _normalize_persona_name(name).lower()
+    for deprecated in DEPRECATED_PERSONAS:
+        if _normalize_persona_name(deprecated).lower() == normalized:
+            return True
+    return False
+
+
+def validate_persona_strict(name: str, category: str) -> Tuple[bool, Optional[str]]:
+    """Strict validation for a persona (Phase 1 Fix #3).
+    
+    Returns (is_valid, error_message).
+    A persona is valid if:
+    1. It is NOT deprecated
+    2. It IS in the canon
+    3. It IS valid for the category
+    """
+    if not name:
+        return False, "Empty persona name"
+    
+    # Check deprecated first
+    if is_deprecated_persona(name):
+        return False, f"'{name}' is a deprecated/sunset persona"
+    
+    # Check canon
+    if not is_canon_persona(name):
+        return False, f"'{name}' is not in the RJM canon"
+    
+    # Check category fit
+    if not is_persona_valid_for_category(name, category):
+        return False, f"'{name}' is not valid for category '{category}'"
+    
+    return True, None
+
+
+def select_personas_with_rotation(
+    pool: List[str],
+    category: str,
+    count: int,
+    exclude: Optional[Set[str]] = None,
+    prefer_fresh: bool = True,
+) -> List[str]:
+    """Select personas from pool with rotation pressure applied (Phase 1 Fix #1).
+    
+    This function applies weighted selection to avoid "default persona gravity"
+    where the same obvious personas keep appearing.
+    
+    Args:
+        pool: List of candidate personas
+        category: Advertising category for hot persona detection
+        count: Number of personas to select
+        exclude: Set of personas to exclude
+        prefer_fresh: Whether to apply freshness weighting
+    
+    Returns:
+        Selected personas in priority order
+    """
+    exclude_set = exclude or set()
+    candidates = []
+    
+    for name in pool:
+        if name in exclude_set:
+            continue
+        
+        # Skip deprecated
+        if is_deprecated_persona(name):
+            continue
+        
+        # Calculate weight
+        recency_pos = -1
+        if prefer_fresh and name in _RECENT_PERSONAS:
+            recency_pos = list(_RECENT_PERSONAS).index(name)
+        
+        weight = get_rotation_weight(name, category, recency_pos)
+        candidates.append((name, weight))
+    
+    # Sort by weight (highest first) with randomization for equal weights
+    candidates.sort(key=lambda x: (-x[1], random.random()))
+    
+    # Select top candidates
+    selected = [name for name, _ in candidates[:count]]
+    
+    return selected
+
+
+def select_highlights_with_rotation(
+    personas: List[str],
+    category: str,
+    count: int = 3,
+    exclude_from_insights: bool = True,
+) -> Tuple[List[str], Set[str]]:
+    """Select highlight personas with rotation pressure (Phase 1 Fix #1 & #2).
+    
+    Returns (highlight_personas, insight_exclusion_set).
+    
+    The insight_exclusion_set contains all highlight personas that MUST NOT
+    appear in insights (Phase 1 Fix #2: hard separation).
+    """
+    selected = select_personas_with_rotation(
+        pool=personas,
+        category=category,
+        count=count,
+        prefer_fresh=True,
+    )
+    
+    # PHASE 1 FIX #2: Build exclusion set for insights
+    insight_exclusion = set(selected) if exclude_from_insights else set()
+    
+    return selected, insight_exclusion
+
+
+def select_insights_personas(
+    pool: List[str],
+    category: str,
+    count: int = 2,
+    exclude: Optional[Set[str]] = None,
+) -> List[str]:
+    """Select personas for insights, ensuring separation from highlights (Phase 1 Fix #2).
+    
+    CRITICAL: The exclude set MUST contain all highlight personas.
+    This enforces hard separation between highlights and insights.
+    """
+    if exclude is None:
+        exclude = set()
+    
+    # Validate that we have candidates
+    available = [p for p in pool if p not in exclude]
+    
+    if not available:
+        app_logger.warning(
+            f"No personas available for insights after excluding {len(exclude)} highlights. "
+            "This may indicate an issue with portfolio size."
+        )
+        # Fall back to pool minus first 3 (likely highlights)
+        available = pool[3:] if len(pool) > 3 else pool
+    
+    return select_personas_with_rotation(
+        pool=available,
+        category=category,
+        count=count,
+        exclude=exclude,
+        prefer_fresh=True,
+    )
+
+
+def get_category_override(brand_name: str) -> Optional[str]:
+    """Get category override for a brand if one exists (Phase 1 Fix #5)."""
+    brand_lower = brand_name.lower().strip()
+    return BRAND_CATEGORY_OVERRIDES.get(brand_lower)
+
+
 # Log initialization
 app_logger.info(
     f"RJM Ingredient Canon 11.26.25 loaded: "
@@ -955,6 +1594,8 @@ app_logger.info(
     f"{len(PHYLUM_PERSONA_MAP)} phyla, "
     f"{len(GENERATIONS)} generations, "
     f"{len(MULTICULTURAL_EXPRESSIONS)} multicultural expressions, "
-    f"{len(LOCAL_CULTURE_DMAS)} DMA segments"
+    f"{len(LOCAL_CULTURE_DMAS)} DMA segments, "
+    f"{len(DEPRECATED_PERSONAS)} deprecated personas, "
+    f"{len(BRAND_CATEGORY_OVERRIDES)} brand overrides"
 )
 

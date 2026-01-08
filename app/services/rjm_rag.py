@@ -13,17 +13,11 @@ from app.services.rjm_ingredient_canon import (
     ALL_GENERATIONAL_NAMES,
     ALL_ANCHORS,
     get_category_personas,
-    get_dual_anchors,
     get_generational_description,
-    infer_category as infer_ad_category,
-    is_canon_persona,
-    is_persona_valid_for_category,
-    get_invalid_personas_for_category,
+    infer_category_with_llm,  # Use LLM-based category detection
     get_persona_phylum,
     get_canonical_name,
     normalize_generational_name,
-    check_phylum_diversity,
-    diversify_by_phylum,
     # Overlay detection and retrieval
     detect_multicultural_lineage,
     get_multicultural_expressions,
@@ -211,14 +205,16 @@ def _build_generational_options() -> str:
 def generate_program_with_rag(request: GenerateProgramRequest) -> ProgramJSON:
     """Run RAG + OpenAI to generate an RJM-style persona program.
     
-    The LLM handles all creative decisions:
-    - Persona selection and phylum diversity
-    - Generational segment selection
-    - Persona insights with percentages
-    - Key identifiers and highlights
+    Uses PersonaAuthority for centralized governance:
+    - Category-bounded persona selection
+    - Phylum diversity enforcement
+    - Highlight/insight separation
+    - Rotation for freshness
     
-    We only backfill if the LLM doesn't return enough content.
+    The LLM handles creative decisions, PersonaAuthority enforces structural rules.
     """
+    from app.services.persona_authority import PersonaAuthority
+    
     client = get_openai_client()
 
     try:
@@ -230,13 +226,18 @@ def generate_program_with_rag(request: GenerateProgramRequest) -> ProgramJSON:
     canon_prompt_list = get_canon_persona_prompt_list()
     canon_preview = ", ".join(canon_prompt_list)
 
-    # Infer advertising category from brand + brief for category-first selection
-    category_context_text = f"{request.brand_name} {request.brief}"
-    inferred_category = infer_ad_category(category_context_text)
+    # Use LLM to accurately detect advertising category (PRIMARY METHOD)
+    # This correctly handles well-known brands like Starbucks, Fendi, Verizon, Peloton
+    inferred_category = infer_category_with_llm(request.brand_name, request.brief)
+    app_logger.info(f"Category detected for '{request.brand_name}': {inferred_category}")
     category_personas = get_category_personas(inferred_category)
     
-    # Use dual anchors for brands that span multiple categories (e.g., L'Oréal)
-    category_anchors = get_dual_anchors(request.brand_name, inferred_category)
+    # Create PersonaAuthority for this generation (SINGLE SOURCE OF TRUTH)
+    authority = PersonaAuthority(
+        category=inferred_category,
+        brand_name=request.brand_name,
+        brief=request.brief,
+    )
 
     generational_options = _build_generational_options()
 
@@ -244,7 +245,7 @@ def generate_program_with_rag(request: GenerateProgramRequest) -> ProgramJSON:
         canon_preview=canon_preview,
         inferred_category=inferred_category,
         category_personas=category_personas,
-        category_anchors=category_anchors,
+        category_anchors=authority.anchors,
         generational_options=generational_options,
     )
 
@@ -261,7 +262,7 @@ def generate_program_with_rag(request: GenerateProgramRequest) -> ProgramJSON:
     if category_personas:
         preview = ", ".join(category_personas[:60])
         user_prompt_parts.append(f"Category personas to prioritize: {preview}")
-    user_prompt_parts.append(f"Category anchors for portfolio placement: {', '.join(category_anchors)}")
+    user_prompt_parts.append(f"Category anchors for portfolio placement: {', '.join(authority.anchors)}")
     user_prompt = "\n".join(user_prompt_parts)
 
     completion = client.chat.completions.create(
@@ -294,92 +295,61 @@ def generate_program_with_rag(request: GenerateProgramRequest) -> ProgramJSON:
     # Always enforce canonical Activation Plan language regardless of model output
     activation_plan = ACTIVATION_PLAN_CANON
 
-    # Validate personas against CATEGORY-SPECIFIC pool (PRIMARY SELECTOR from Ingredient Canon)
-    # This is critical: personas MUST be valid for the detected category
-    valid_personas: List[Persona] = []
-    rejected_personas: List[str] = []
-    seen_names: set[str] = set()
-
-    # Build set of anchor names to skip (LLM sometimes puts anchors in personas array)
-    anchor_names = set(ALL_ANCHORS)
-
-    app_logger.info(f"Processing {len(personas_raw)} personas from LLM response for category: {inferred_category}")
+    # === USE PERSONA AUTHORITY FOR VALIDATION ===
+    # Extract persona names from LLM output
+    llm_persona_names = []
+    llm_persona_highlights = {}  # Map name -> highlight
 
     for p in personas_raw:
         name = p.get("name")
         if not name:
             continue
-
-        # Skip anchors that LLM mistakenly put in personas array
-        if name in anchor_names or name.startswith("RJM "):
-            app_logger.debug(f"Skipping anchor in personas array: {name}")
+        # Skip anchors and generational segments
+        if name in ALL_ANCHORS or name.startswith("RJM ") or name in ALL_GENERATIONAL_NAMES:
             continue
+        llm_persona_names.append(name)
+        if p.get("highlight"):
+            llm_persona_highlights[name] = p.get("highlight")
+    
+    app_logger.info(f"Processing {len(llm_persona_names)} personas from LLM for category: {inferred_category}")
 
-        # Skip generational segments in the core persona list
-        if name in ALL_GENERATIONAL_NAMES:
-            app_logger.debug(f"Skipping generational segment in personas array: {name}")
+    # Validate personas through PersonaAuthority (enforces category boundaries)
+    validated_names = authority.validate_personas(llm_persona_names, log_rejections=True)
+    
+    # Build Persona objects with validated names
+    valid_personas: List[Persona] = []
+    seen_names: set[str] = set()
+    
+    for name in validated_names:
+        if name in seen_names:
             continue
-
-        # Get canonical name (handles variations like "Budget-Minded" vs "Budget Minded")
-        canonical_name = get_canonical_name(name)
-
-        # CRITICAL: Check if persona is VALID FOR THIS CATEGORY (not just canon)
-        # This enforces the Category → Persona Map as PRIMARY SELECTOR
-        if not is_persona_valid_for_category(canonical_name, inferred_category):
-            # Also try the original name
-            if not is_persona_valid_for_category(name, inferred_category):
-                rejected_personas.append(name)
-                app_logger.warning(
-                    f"REJECTED persona '{name}' - not valid for category '{inferred_category}'. "
-                    f"Category personas: {category_personas[:10]}..."
-                )
-                continue
-            else:
-                canonical_name = name
-
-        if canonical_name in seen_names:
-            continue
-
-        seen_names.add(canonical_name)
+        seen_names.add(name)
+        
+        # Get canonical name for phylum lookup
+        canonical = get_canonical_name(name)
+        
+        # Check if this persona had a highlight from LLM
+        highlight = None
+        for llm_name, llm_highlight in llm_persona_highlights.items():
+            if get_canonical_name(llm_name) == canonical:
+                highlight = llm_highlight
+                break
+        
         valid_personas.append(
             Persona(
-                name=canonical_name,
-                category=p.get("category") or inferred_category,
-                phylum=get_persona_phylum(canonical_name),
-                highlight=p.get("highlight"),
+                name=canonical,
+                category=inferred_category,
+                phylum=get_persona_phylum(canonical),
+                highlight=highlight,
             )
         )
-
-    app_logger.info(
-        f"Category validation: {len(valid_personas)} valid, {len(rejected_personas)} rejected. "
-        f"Rejected: {rejected_personas[:5]}"
-    )
-
-    # Check phylum diversity (SECONDARY SELECTOR from Ingredient Canon)
-    # Ensures cultural texture and prevents over-clustering in one phylum
-    is_diverse, phylum_counts = check_phylum_diversity(
-        [p.name for p in valid_personas],
-        min_phyla=3,
-        max_dominance=0.35
-    )
-    if not is_diverse and len(valid_personas) > 0:
-        app_logger.warning(
-            f"Phylum diversity issue detected: {phylum_counts}. "
-            f"Adding diversity from category pool."
-        )
-        # Get names for diversification
-        current_names = [p.name for p in valid_personas]
-        # Diversify using category-valid personas only
-        diversified_names = diversify_by_phylum(
-            current=current_names,
-            pool=[n for n in category_personas if n not in seen_names],
-            target_count=15,
-            min_phyla=3,
-            max_dominance=0.35
-        )
-        # Add any new personas from diversification
-        for name in diversified_names:
-            if name not in seen_names and is_persona_valid_for_category(name, inferred_category):
+    
+    # Build portfolio through PersonaAuthority (handles diversity, rotation, backfill)
+    portfolio_names = authority.build_portfolio([p.name for p in valid_personas], target_count=15)
+    
+    # Ensure valid_personas includes all portfolio names
+    for name in portfolio_names:
+        if name not in seen_names:
                 seen_names.add(name)
                 valid_personas.append(
                     Persona(
@@ -389,18 +359,17 @@ def generate_program_with_rag(request: GenerateProgramRequest) -> ProgramJSON:
                         highlight=None,
                     )
                 )
-        # Re-check diversity after enrichment
-        is_diverse, phylum_counts = check_phylum_diversity(
-            [p.name for p in valid_personas],
-            min_phyla=3,
-            max_dominance=0.35
-        )
-        app_logger.info(f"After diversity enrichment: {len(valid_personas)} personas, phyla={phylum_counts}")
+    
+    app_logger.info(
+        f"PersonaAuthority built portfolio: {len(portfolio_names)} personas, "
+        f"diversity stats: {authority.context.get_phylum_distribution()}"
+    )
 
-    # Validate generational segments (trust LLM's selection, just validate they exist)
-    # Handle both old format (list of strings) and new format (list of objects with name/highlight)
-    valid_generational: List[dict] = []
-    seen_gen_names: set[str] = set()
+    # === USE PERSONA AUTHORITY FOR GENERATIONAL SEGMENTS ===
+    # Extract LLM suggestions for generational segments
+    llm_generational_names = []
+    llm_generational_highlights = {}
+    
     for seg in generational_segments_raw:
         if isinstance(seg, dict):
             name = seg.get("name", "")
@@ -409,103 +378,75 @@ def generate_program_with_rag(request: GenerateProgramRequest) -> ProgramJSON:
             name = seg
             highlight = ""
         
-        # Normalize the generational name (handles "Gen-Z Prompted" -> "Gen Z–Prompted")
-        canonical_gen_name = normalize_generational_name(name)
-        if canonical_gen_name and canonical_gen_name not in seen_gen_names:
-            seen_gen_names.add(canonical_gen_name)
-            valid_generational.append({"name": canonical_gen_name, "highlight": highlight})
-        elif name and not canonical_gen_name:
-            app_logger.warning(f"Skipping unrecognized generational segment: {name}")
+        canonical = normalize_generational_name(name)
+        if canonical:
+            llm_generational_names.append(canonical)
+            if highlight:
+                llm_generational_highlights[canonical] = highlight
     
-    # MANDATORY: Ensure ALL 4 generational cohorts are represented (per Ingredient Canon)
-    # Every program MUST include one from each: Gen Z, Millennial, Gen X, Boomer
-    cohorts_present = set()
-    for g in valid_generational:
-        gen_name = g["name"]
-        if gen_name.startswith("Gen Z"):
-            cohorts_present.add("Gen Z")
-        elif gen_name.startswith("Millennial"):
-            cohorts_present.add("Millennial")
-        elif gen_name.startswith("Gen X"):
-            cohorts_present.add("Gen X")
-        elif gen_name.startswith("Boomer"):
-            cohorts_present.add("Boomer")
-
-    missing_cohorts = set(GENERATIONS_BY_COHORT.keys()) - cohorts_present
-    if missing_cohorts:
-        app_logger.info(f"Backfilling missing generational cohorts: {missing_cohorts}")
-        for cohort in missing_cohorts:
-            segments = GENERATIONS_BY_COHORT.get(cohort, [])
-            if segments:
-                # Pick first segment from this cohort
-                valid_generational.append({"name": segments[0], "highlight": ""})
-
-    # Cap at 4 generational segments (one per cohort)
-    valid_generational = valid_generational[:4]
+    # Select generational segments through PersonaAuthority
+    final_generational_names = authority.select_generational(llm_generational_names)
     
-    # BACKFILL: If any generational segment has empty highlight, create one from description
-    for seg in valid_generational:
-        if not seg.get("highlight"):
-            desc = get_generational_description(seg["name"])
+    # Build generational segment dicts with highlights
+    valid_generational: List[dict] = []
+    for name in final_generational_names:
+        highlight = llm_generational_highlights.get(name, "")
+        
+        # BACKFILL: If no highlight, create from description
+        if not highlight:
+            desc = get_generational_description(name)
             if desc:
-                # Extract a short highlight from the description (first ~10 words after "Curated for")
                 if "—" in desc:
                     short_desc = desc.split("—")[1].strip()[:80]
                 else:
                     short_desc = desc.replace("Curated for a generation that ", "").strip()[:80]
-                # Truncate to ~10 words
                 words = short_desc.split()[:10]
-                seg["highlight"] = " ".join(words).rstrip(".,;—") + "."
-
-    # BACKFILL ONLY: If LLM didn't return enough personas, add from category pool
-    # Using category-specific personas ONLY (enforcing PRIMARY SELECTOR)
-    if len(valid_personas) < 6:
-        app_logger.warning(
-            f"Model returned only {len(valid_personas)} valid personas; backfilling from category pool"
-        )
-        # Use diversify_by_phylum to add personas while maintaining diversity
-        current_names = [p.name for p in valid_personas]
-        backfill_pool = [
-            n for n in category_personas
-            if n not in seen_names
-            and n not in ALL_GENERATIONAL_NAMES
-            and is_persona_valid_for_category(n, inferred_category)
-        ]
-        diversified_names = diversify_by_phylum(
-            current=current_names,
-            pool=backfill_pool,
-            target_count=15,
-            min_phyla=3,
-            max_dominance=0.35
-        )
-        for persona_name in diversified_names:
-            if len(valid_personas) >= 15:
-                break
-            if persona_name in seen_names:
-                continue
-            seen_names.add(persona_name)
-            valid_personas.append(
-                Persona(
-                    name=persona_name,
-                    category=inferred_category,
-                    phylum=get_persona_phylum(persona_name),
-                    highlight=None,
-                )
-            )
-        app_logger.info(f"After backfill: {len(valid_personas)} personas")
-
-    # Use LLM's persona insights directly (trust the LLM's percentages and content)
-    persona_insights = persona_insights_raw[:2] if persona_insights_raw else []
+                highlight = " ".join(words).rstrip(".,;—") + "."
+        
+        valid_generational.append({"name": name, "highlight": highlight})
     
-    # BACKFILL ONLY: If LLM didn't return insights
+    app_logger.info(f"PersonaAuthority selected generational segments: {final_generational_names}")
+
+    # === USE PERSONA AUTHORITY FOR HIGHLIGHT SELECTION ===
+    # Select highlights through PersonaAuthority (ensures freshness, diversity)
+    personas_with_highlights = [p.name for p in valid_personas if p.highlight]
+    highlight_names = authority.select_highlights(personas_with_highlights, count=3)
+    
+    # Register highlight names in authority context
+    for name in highlight_names:
+        authority.context.add_to_highlights(name)
+
+    # === USE PERSONA AUTHORITY FOR INSIGHT VALIDATION ===
+    # Select personas for insights (must be different from highlights)
+    insight_candidates = [p.name for p in valid_personas if p.name not in highlight_names]
+    authority.select_for_insights(insight_candidates, count=2)  # Registers in context
+    
+    # Validate and fix persona insights
+    persona_insights = []
+    for insight in persona_insights_raw[:2]:
+        is_valid, mentioned_persona, error = authority.validate_insight_text(insight)
+        if not is_valid and error:
+            # Fix the insight by replacing invalid persona
+            fixed_insight = authority.fix_insight_persona(insight)
+            persona_insights.append(fixed_insight)
+            app_logger.info(f"Fixed insight: {error}")
+        else:
+            persona_insights.append(insight)
+    
+    # BACKFILL: If LLM didn't return enough insights
     if len(persona_insights) < 2:
         app_logger.info("Backfilling persona insights (LLM returned insufficient)")
-        # Create simple fallback insights using available personas
-        fallback_personas = [p.name for p in valid_personas[:2]] or ["Luxury Insider", "Self Love"]
+        # Use personas from context that aren't in highlights
+        fallback_personas = [
+            p.name for p in valid_personas 
+            if p.name not in highlight_names
+        ][:2] or [valid_personas[0].name if valid_personas else "Self Love"]
+        
         while len(persona_insights) < 2:
             idx = len(persona_insights)
+            persona_name = fallback_personas[idx % len(fallback_personas)]
             persona_insights.append(
-                f"Audiences who connect with this brand's cultural positioning are \"{fallback_personas[idx % len(fallback_personas)]}.\""
+                f"Audiences who connect with this brand's cultural positioning are \"{persona_name}.\""
             )
 
     # Normalize demos (accept LLM's values, only provide fallbacks if missing)
@@ -562,7 +503,7 @@ def generate_program_with_rag(request: GenerateProgramRequest) -> ProgramJSON:
         key_identifiers=list(key_identifiers),
         personas=valid_personas,
         generational_segments=generational_segment_objects,
-        category_anchors=category_anchors,
+        category_anchors=authority.anchors,  # Use PersonaAuthority for anchors
         multicultural_expressions=multicultural_overlays,
         local_culture_segments=local_culture_overlays,
         persona_insights=list(persona_insights),

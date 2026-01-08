@@ -32,17 +32,12 @@ from app.utils.responses import SuccessResponse, success_response
 from app.utils.auth import get_current_user_id, require_auth
 from app.services.rjm_ingredient_canon import (
     ALL_GENERATIONAL_NAMES,
-    get_category_personas,
-    get_dual_anchors,
-    infer_category as infer_ad_category,
+    infer_category_with_llm,  # Use LLM-based category detection
     is_local_brief,
-    register_personas_for_rotation,
-    register_generational_for_rotation,
-    is_persona_recent,
-    is_generational_recent,
     detect_multicultural_lineage,
     get_multicultural_expressions,
 )
+from app.services.persona_authority import PersonaAuthority
 
 router = APIRouter(prefix="/v1/rjm", tags=["rjm"])
 
@@ -102,12 +97,15 @@ async def generate_persona_program(
         
         detected_category = (
             program_json.advertising_category
-            or infer_ad_category(f"{request.brand_name} {request.brief}")
+            or infer_category_with_llm(request.brand_name, request.brief)
         )
-        category_persona_pool = get_category_personas(detected_category)
         
-        # Use dual anchors for brands that span multiple categories
-        category_anchors = get_dual_anchors(request.brand_name, detected_category)
+        # Use PersonaAuthority for governance (same as chat and RAG pipeline)
+        authority = PersonaAuthority(
+            category=detected_category,
+            brand_name=request.brand_name,
+            brief=request.brief,
+        )
 
         # Packaging text formatting per MIRA Packaging Implementation Spec
         lines: list[str] = []
@@ -209,48 +207,28 @@ async def generate_persona_program(
             lines.append(f"• Broad : {broad_demo}")
         lines.append("")
 
-        # 6. Persona Portfolio (~20 total with anchors & generational mix)
+        # 6. Persona Portfolio (15 core personas + 4 generational + category anchors)
+        # Use PersonaAuthority for portfolio building (same governance as chat)
         core_personas = [
             p.name for p in program_json.personas if p.name not in ALL_GENERATIONAL_NAMES
         ]
-        core_personas = _dedupe_preserve(core_personas)
-
-        core_personas = _fill_persona_list(
-            result=core_personas,
-            pool=category_persona_pool,
-            target=15,
-            excluded=ALL_GENERATIONAL_NAMES,
-            recent_checker=is_persona_recent,
-        )
-
-        # Use the generational segments from the model (extract names from GenerationalSegment objects)
-        generational_names = [seg.name for seg in generational_segments[:4]]
         
-        # Ensure we have 4 generational segments (backfill if needed)
-        if len(generational_names) < 4:
-            from app.services.rjm_ingredient_canon import GENERATIONS_BY_COHORT
-            for cohort, segments in GENERATIONS_BY_COHORT.items():
-                if len(generational_names) >= 4:
-                    break
-                has_cohort = any(name.startswith(cohort) for name in generational_names)
-                if not has_cohort and segments:
-                    # Pick one that hasn't been used recently
-                    for seg in segments:
-                        if not is_generational_recent(seg):
-                            generational_names.append(seg)
-                            break
-                    else:
-                        generational_names.append(segments[0])
+        # Build portfolio through PersonaAuthority (validates category, enforces diversity, rotation)
+        final_core = authority.build_portfolio(core_personas, target_count=15)
 
-        # Get anchors (handles dual-anchor brands like L'Oréal)
-        anchors = category_anchors[:2]
+        # Use the generational segments from the model (PersonaAuthority handles selection)
+        generational_segments = program_json.generational_segments or []
+        llm_generational_names = [seg.name for seg in generational_segments[:4]]
+        final_generational = authority.select_generational(llm_generational_names)
 
-        final_core = core_personas[:15]
-        final_generational = generational_names[:4]
-        final_portfolio = final_core + anchors + final_generational
-
-        register_personas_for_rotation([name for name in final_core if name not in highlight_names])
-        register_generational_for_rotation(final_generational)
+        # PHASE 1 FIX #4: Reinstate Ad-category anchor segments
+        # Category anchors ARE included as commercial anchors in the portfolio
+        # They do NOT have write-ups, but they anchor the program to the ad-category
+        category_anchors = authority.anchors or []
+        
+        # Final portfolio: 15 core personas + 4 generational + category anchors
+        # This creates the full 20+ segment program structure
+        final_portfolio = final_core + final_generational + category_anchors
 
         lines.append("📍 Persona Portfolio")
         lines.append(" · ".join(final_portfolio))
