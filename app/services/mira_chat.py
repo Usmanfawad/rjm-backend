@@ -42,6 +42,14 @@ from app.services.mira_session import (
     set_program_summary,
     get_program_summary,
 )
+from app.services.rjm_ingredient_canon import (
+    is_canon_persona,
+    get_canonical_name,
+    get_category_personas,
+    is_local_brief,
+    get_local_culture_segment,
+    MAJOR_CITIES,
+)
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1585,6 +1593,25 @@ def handle_chat_turn(req: MiraChatRequest, user_id: Optional[str] = None) -> Mir
         app_logger.error(f"MIRA chat error: {exc}")
         reply = "I encountered an issue. Could you rephrase that?"
 
+    # ════════════════════════════════════════════════════════════════════════════
+    # PHASE 2: POST-PROCESSING - PERSONA VALIDATION & LOCAL CULTURE
+    # ════════════════════════════════════════════════════════════════════════════
+    
+    # Get category from session context for persona validation
+    current_category = session_context.get("category")
+    current_brief = session_context.get("brief") or ""
+    current_brand = session_context.get("brand_name") or ""
+    
+    # 1. PERSONA INVENTION PREVENTION
+    # Validate and fix any invented persona names in the response
+    if reply:
+        reply = _validate_and_fix_persona_mentions(reply, current_category)
+    
+    # 2. LOCAL CULTURE INVOCATION
+    # Add Local Culture segment guidance for geo-targeted campaigns
+    if reply and current_brief:
+        reply = _inject_local_culture_guidance(reply, current_brief, current_brand)
+
     # Store MIRA's reply in conversation history
     if reply:
         add_message_to_history(session_id, "assistant", reply)
@@ -1659,6 +1686,154 @@ def _extract_and_store_context(
             update_session(session_id, brief=brief)
     except json.JSONDecodeError:
         pass
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# PERSONA INVENTION PREVENTION
+# Validates and fixes persona mentions in chat responses
+# ════════════════════════════════════════════════════════════════════════════
+
+# Common fake persona names that LLMs tend to invent
+KNOWN_FAKE_PERSONAS = {
+    "wealth builder", "adventure seeker", "growth optimizer", "deal hunter",
+    "sophisticated seeker", "lifestyle aficionado", "value maximizer",
+    "eco warrior", "tech enthusiast", "foodie explorer", "style maven",
+    "fitness fanatic", "travel buff", "home chef", "wine lover",
+    "outdoor enthusiast", "music fan", "sports lover", "car buff",
+    "fashion forward", "health nut", "bargain shopper", "luxury lover",
+    "family first", "career climber", "social butterfly enthusiast",
+    "budget conscious", "quality seeker", "experience hunter",
+    "brand loyalist", "trendsetter", "early adopter enthusiast",
+}
+
+
+def _validate_and_fix_persona_mentions(
+    reply: str,
+    category: Optional[str] = None
+) -> str:
+    """
+    Validate persona mentions in chat responses and replace invented names.
+    
+    This is PHASE 2 FIX: Persona Invention Prevention
+    - Scans the reply for quoted persona names
+    - Checks if they're in the RJM canon
+    - Replaces fake names with valid alternatives
+    """
+    import re
+    
+    if not reply:
+        return reply
+    
+    # Find all quoted terms that might be persona names
+    # Patterns: "Persona Name", 'Persona Name', or personas like "the Persona Name"
+    quoted_pattern = r'["\']([A-Z][^"\']{2,30})["\']'
+    
+    matches = re.findall(quoted_pattern, reply)
+    
+    if not matches:
+        return reply
+    
+    modified_reply = reply
+    replacements_made = []
+    
+    for potential_persona in matches:
+        # Skip if it's clearly not a persona (too short, common words, etc.)
+        if len(potential_persona) < 3:
+            continue
+        if potential_persona.lower() in {"the", "and", "for", "this", "that", "with", "from"}:
+            continue
+        
+        # Check if it's a known fake persona
+        is_fake = potential_persona.lower() in KNOWN_FAKE_PERSONAS
+        
+        # Check if it's in the canon
+        canonical = get_canonical_name(potential_persona)
+        is_valid = is_canon_persona(canonical)
+        
+        if is_fake or not is_valid:
+            # This is an invented persona - try to find a replacement
+            replacement = None
+            
+            # If we have a category, get a valid persona from that category
+            if category:
+                category_personas = get_category_personas(category)
+                if category_personas:
+                    # Pick a relevant one based on context
+                    replacement = category_personas[0]  # Default to first valid persona
+                    
+                    # Try to match by keyword similarity
+                    potential_lower = potential_persona.lower()
+                    for p in category_personas[:20]:
+                        if any(word in potential_lower for word in p.lower().split()):
+                            replacement = p
+                            break
+            
+            if replacement:
+                # Replace in the text
+                modified_reply = modified_reply.replace(f'"{potential_persona}"', f'"{replacement}"')
+                modified_reply = modified_reply.replace(f"'{potential_persona}'", f"'{replacement}'")
+                replacements_made.append((potential_persona, replacement))
+                app_logger.info(
+                    f"PERSONA INVENTION PREVENTION: Replaced '{potential_persona}' with '{replacement}'"
+                )
+    
+    if replacements_made:
+        app_logger.info(f"Fixed {len(replacements_made)} invented persona(s) in chat response")
+    
+    return modified_reply
+
+
+def _inject_local_culture_guidance(
+    reply: str,
+    brief: str,
+    brand_name: str
+) -> str:
+    """
+    Inject Local Culture segment guidance when geo-targeting is detected.
+    
+    This is PHASE 2 FIX: Local Culture Invocation
+    - Detects if the brief mentions specific cities/DMAs
+    - Adds Local Culture segment recommendations to the reply
+    """
+    if not brief:
+        return reply
+    
+    # Check if this is a local/geo-targeted brief
+    if not is_local_brief(brief):
+        return reply
+    
+    # Extract city/DMA mentions from the brief
+    text_lower = f"{brand_name} {brief}".lower()
+    
+    # Find mentioned cities and get their Local Culture segments
+    detected_dmas = []
+    for city in MAJOR_CITIES:
+        if city in text_lower:
+            segment = get_local_culture_segment(city)
+            if segment and segment not in detected_dmas:
+                detected_dmas.append(segment)
+    
+    if not detected_dmas:
+        return reply
+    
+    # If we detected DMAs and the reply doesn't already mention Local Culture, add guidance
+    if "local culture" not in reply.lower() and "local strategy" not in reply.lower():
+        local_guidance = (
+            "\n\n📍 **Local Culture Opportunity**\n"
+            "Since this campaign targets specific markets, consider applying these Local Culture segments:\n"
+        )
+        for dma in detected_dmas[:5]:  # Max 5 DMAs
+            local_guidance += f"• {dma}\n"
+        local_guidance += (
+            "\nThese DMA-based segments capture the local identity and cultural nuance "
+            "of each market while staying tied to the overarching brand framework."
+        )
+        
+        # Append to reply
+        reply = reply + local_guidance
+        app_logger.info(f"LOCAL CULTURE INVOCATION: Added {len(detected_dmas)} DMA segments to response")
+    
+    return reply
 
 
 # ════════════════════════════════════════════════════════════════════════════

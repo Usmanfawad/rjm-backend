@@ -49,6 +49,9 @@ from app.services.rjm_ingredient_canon import (
     is_deprecated_persona,
     is_hot_persona,
     get_rotation_weight,
+    # Meaning-led overlays
+    get_flexible_persona_pool,
+    detect_meaning_tags,
 )
 
 
@@ -217,10 +220,13 @@ class PersonaAuthority:
         self.min_phyla = min_phyla
         self.max_phylum_dominance = max_phylum_dominance
         
-        # Get the authoritative persona pool for this category
-        self.category_pool = get_category_personas(category)
+        # Meaning-led flexible pool: category-first but with overlays for edge briefs
+        self.category_pool = get_flexible_persona_pool(category, brand_name, brief)
         self.category_pool_set = set(self.category_pool)
-        
+
+        # Meaning tags for logging/debugging
+        self.meaning_tags = detect_meaning_tags(brand_name, brief)
+
         # Get category anchors
         self.anchors = get_dual_anchors(brand_name, category)
         
@@ -233,8 +239,25 @@ class PersonaAuthority:
         
         app_logger.info(
             f"PersonaAuthority initialized: category={category}, "
-            f"pool_size={len(self.category_pool)}, anchors={self.anchors}"
+            f"pool_size={len(self.category_pool)}, anchors={self.anchors}, "
+            f"meaning_tags={sorted(self.meaning_tags)}"
         )
+
+    def _is_allowed_persona(self, name: str) -> bool:
+        """Allow personas that pass category check OR are in the flexible pool."""
+        if not name:
+            return False
+        if is_deprecated_persona(name):
+            return False
+
+        canonical = get_canonical_name(name)
+
+        # Category guardrail
+        if is_persona_valid_for_category(canonical, self.category):
+            return True
+
+        # Meaning-led overlays (already merged into category_pool)
+        return canonical in self.category_pool_set or name in self.category_pool_set
     
     def validate_persona(self, name: str) -> Tuple[bool, str, Optional[str]]:
         """Validate a single persona against category constraints.
@@ -266,12 +289,9 @@ class PersonaAuthority:
         if is_deprecated_persona(canonical):
             return False, name, f"Deprecated/sunset persona '{canonical}' - not in active canon"
         
-        # CRITICAL: Validate against category pool (PRIMARY SELECTOR)
-        if not is_persona_valid_for_category(canonical, self.category):
-            # Try original name too
-            if not is_persona_valid_for_category(name, self.category):
-                return False, name, f"Not valid for category '{self.category}'"
-            canonical = name
+        # Flexible allow: category guardrail OR meaning-led pool
+        if not self._is_allowed_persona(canonical):
+            return False, name, f"Not valid for category '{self.category}' (meaning tags={sorted(self.meaning_tags)})"
         
         return True, canonical, None
     
@@ -342,8 +362,8 @@ class PersonaAuthority:
             if is_deprecated_persona(name):
                 continue
             
-            # Must be valid for category
-            if not is_persona_valid_for_category(name, self.category):
+            # Must be allowed via category guardrail or meaning overlays
+            if not self._is_allowed_persona(name):
                 continue
             
             # Calculate rotation weight
@@ -409,8 +429,8 @@ class PersonaAuthority:
             if is_deprecated_persona(name):
                 continue
             
-            # Must be valid for category
-            if not is_persona_valid_for_category(name, self.category):
+            # Must be allowed via category guardrail or meaning overlays
+            if not self._is_allowed_persona(name):
                 continue
             
             # PHASE 1 FIX #2: HARD RULE - Must not be in highlights
@@ -449,9 +469,25 @@ class PersonaAuthority:
         Returns:
             (is_valid, extracted_persona_name, error_message)
         """
-        # Extract persona name from insight (typically in quotes at the end)
-        # Handle both single and double quotes: ...are "Persona Name" or ...are 'Persona Name'
+        # Extract persona name from insight - multiple formats:
+        # - "...are 'Persona Name'."
+        # - "...are 'Persona Name'"
+        # - "...reflecting the 'Persona Name' persona."
+        # - "...indicative of the 'Persona Name' mindset."
+        # Try multiple patterns to catch all formats
+        match = None
+        
+        # Pattern 1: Quoted name at end (with optional period)
         match = re.search(r'["\']([^"\']+)["\']\.?$', insight_text)
+        
+        # Pattern 2: Quoted name followed by "persona" or "mindset" etc.
+        if not match:
+            match = re.search(r'["\']([^"\']+)["\'](?:\s+(?:persona|mindset|segment|type))?\.?$', insight_text)
+        
+        # Pattern 3: Any quoted name in the text (fallback)
+        if not match:
+            match = re.search(r'["\']([^"\']+)["\']', insight_text)
+        
         if not match:
             return True, None, None  # No persona mentioned, that's okay
         
@@ -472,9 +508,9 @@ class PersonaAuthority:
         if is_deprecated_persona(canonical):
             return False, persona_name, f"Persona '{persona_name}' is deprecated/sunset"
         
-        # Validate against category pool
-        if not is_persona_valid_for_category(canonical, self.category):
-            return False, persona_name, f"Persona '{persona_name}' not valid for category '{self.category}'"
+        # Validate against category guardrail OR meaning-led pool
+        if not self._is_allowed_persona(canonical):
+            return False, persona_name, f"Persona '{persona_name}' not valid for category '{self.category}' (meaning tags={sorted(self.meaning_tags)})"
         
         # Check if it's in the portfolio (try both original and singular forms)
         in_portfolio = self.context.is_in_portfolio(canonical)
@@ -520,13 +556,21 @@ class PersonaAuthority:
         
         if replacement and persona_name:
             # Replace the persona name in the insight (handle both single and double quotes)
-            # Detect which quote style was used
-            if f"'{persona_name}'" in insight_text or f"'{persona_name}." in insight_text:
-                # Single quotes used
-                fixed = re.sub(r"'[^']+'\.?$", f"'{replacement}.'", insight_text)
+            # Handle various formats:
+            # - 'Persona Name'
+            # - "Persona Name"
+            # - 'Persona Name' persona.
+            # - 'Persona Name' mindset.
+            
+            if f"'{persona_name}'" in insight_text:
+                # Single quotes - replace the exact quoted name
+                fixed = insight_text.replace(f"'{persona_name}'", f"'{replacement}'")
+            elif f'"{persona_name}"' in insight_text:
+                # Double quotes - replace the exact quoted name
+                fixed = insight_text.replace(f'"{persona_name}"', f'"{replacement}"')
             else:
-                # Double quotes used
-                fixed = re.sub(r'"[^"]+"\.?$', f'"{replacement}."', insight_text)
+                # Fallback: try to replace any occurrence
+                fixed = insight_text.replace(persona_name, replacement)
             
             self.context.add_to_insights(replacement)
             app_logger.info(

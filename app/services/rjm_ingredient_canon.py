@@ -170,6 +170,10 @@ BRAND_CATEGORY_OVERRIDES: Dict[str, str] = {
     "la colombe": "Culinary & Dining",
     "counter culture": "Culinary & Dining",
     
+    # Delivery/platform food
+    "uber eats": "QSR",
+    "ubereats": "QSR",
+    
     # Luxury brands (ensure proper categorization)
     "fendi": "Luxury & Fashion",
     "gucci": "Luxury & Fashion",
@@ -264,6 +268,43 @@ BRAND_CATEGORY_OVERRIDES: Dict[str, str] = {
     "casamigos": "Alcohol & Spirits",
     "white claw": "Alcohol & Spirits",
     "truly": "Alcohol & Spirits",
+}
+
+# Meaning-based overlay persona sets (used to loosen category hard-lock for edge briefs)
+PET_SERVICE_PERSONAS: Set[str] = {
+    # Core pet personas (PRIORITIZE THESE)
+    "Dog Parent", "Cat Person", "Rescuer", "Pack Leader", "Petfluencer",
+    "Pawrent", "Best in Show", "Lulu",
+    # Community / local (pet owners are local customers)
+    "Neighborhood Watch", "Volunteer", "Hometown Hero", "Main Street",
+    # Caregiving mindset (pet ownership is caregiving)
+    "Caregiver", "Single Parent", "Empty Nester",
+    # Outdoor / active with pets
+    "Nature Lover", "Hiker", "Trailblazer", "Morning Stroll", "Weekend Warrior",
+}
+
+EDUCATION_PERSONAS: Set[str] = {
+    # Core education & growth personas (PRIORITIZE THESE)
+    "Scholar", "Reader", "Writer", "Coach", "Mentor", "Planner", "Self-Love",
+    "Modern Monk", "Optimist", "Journey", "Legacy",
+    # Flex-life / returning learner personas (adult education audience)
+    "Single Parent", "Caregiver", "Empty Nester", "Retiree",
+    # Digital/remote learning
+    "Digital Nomad", "Techie",
+    # Career growth (use sparingly - not the primary audience)
+    "Builder", "Innovator", "Entrepreneur",
+}
+
+CIVIC_PERSONAS: Set[str] = {
+    # Community & local pride (PRIORITIZE THESE)
+    "Neighborhood Watch", "Volunteer", "Main Street", "PTA", "Mayor",
+    "Hometown Hero", "Southern Hospitality",
+    # Values & tradition
+    "Faith", "Believer", "Legacy", "Family Table",
+    # Civic engagement
+    "Potomac Power", "Social Architect", "Journey",
+    # Practical voters
+    "Planner", "Caregiver", "Single Parent", "Empty Nester",
 }
 
 
@@ -943,39 +984,66 @@ def infer_category_with_llm(brand_name: str, brief: str) -> str:
     from app.config.settings import settings
     from app.services.rjm_vector_store import get_openai_client
     
-    # PHASE 1 FIX #5: Check brand category overrides FIRST
-    brand_lower = brand_name.lower().strip()
-    if brand_lower in BRAND_CATEGORY_OVERRIDES:
-        override_category = BRAND_CATEGORY_OVERRIDES[brand_lower]
-        app_logger.info(f"Category override applied: '{brand_name}' -> '{override_category}'")
-        return override_category
+    # NOTE: Overrides disabled to allow LLM to decide category freely
     
     # Get the canonical category list
     valid_categories = list(CATEGORY_PERSONA_MAP.keys())
     categories_list = "\n".join(f"- {cat}" for cat in valid_categories)
     
-    # Build the LLM prompt
-    system_prompt = f"""You are an advertising category classifier. Your job is to determine the correct advertising category for a brand.
+    # Build the LLM prompt with comprehensive edge case guidance
+    system_prompt = f"""You are an advertising category classifier for RJM. Your job is to determine the correct advertising category for a brand based on its PRIMARY business model and the campaign brief.
 
 VALID CATEGORIES (choose exactly one):
 {categories_list}
 
-IMPORTANT CATEGORY GUIDANCE:
-- Culinary & Dining: Coffee shops, restaurants, cafes, food service (Starbucks, Hillstone, Chipotle)
-- QSR: Fast food, quick service restaurants (McDonald's, Burger King, Wendy's)
-- Luxury & Fashion: High-end fashion, luxury goods, designer brands (Fendi, Gucci, Louis Vuitton, Chanel)
-- Tech & Wireless: Telecom, mobile carriers, technology companies (Verizon, AT&T, T-Mobile, Apple, Samsung)
-- Sports & Fitness: Fitness equipment, athletic brands, gyms (Peloton, Nike, Adidas, Equinox)
-- Finance & Insurance: Banks, credit cards, insurance companies (Chase, Amex, State Farm)
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL CATEGORY GUIDANCE - READ CAREFULLY
+═══════════════════════════════════════════════════════════════════════════════
+
+FOOD DELIVERY PLATFORMS (this is important!):
+- Uber Eats, DoorDash, Grubhub, Postmates, Instacart → QSR (not Culinary & Dining)
+- These are QUICK SERVICE platforms focused on delivery/convenience, not sit-down dining
+- If the brief mentions "delivery", "app", "doorstep", "order online" → lean QSR
+
+FOOD & DINING:
+- Culinary & Dining: Sit-down restaurants, coffee shops, cafes, food experiences (Starbucks, Hillstone, Cheesecake Factory)
+- QSR: Fast food, quick service, drive-thru, delivery-first (McDonald's, Dunkin', Taco Bell, Chick-fil-A)
+
+EDUCATION & TRAINING:
+- University of Phoenix, Coursera, LinkedIn Learning, trade schools → B2B & Professional Services
+- These serve adult learners and career development, not consumer packaged goods
+
+POLITICAL / CIVIC / VOTER CAMPAIGNS (IMPORTANT!):
+- Political candidates, voter campaigns, ballot initiatives → CPG (NOT B2B)
+- These target VOTERS (consumers), not businesses
+- Congressional, mayoral, gubernatorial, local elections → CPG
+- The audience is everyday citizens, not enterprise buyers
+- Do NOT classify political campaigns as B2B & Professional Services
+
+LOCAL SERVICES & SMALL BUSINESSES:
+- Pet services (dog walking, grooming, vet), local trades, community services → CPG or Retail & E-Commerce
+- Focus on the SERVICE being offered to local consumers
+
+GROCERY & SUPERMARKETS:
+- Whole Foods, Trader Joe's, Kroger, Costco → Retail & E-Commerce (not CPG)
+- They SELL CPG products but they ARE retailers
+
+RIDESHARE & TRANSPORTATION:
+- Uber (rides), Lyft → Tech & Wireless or Travel & Hospitality
+- These are tech platforms, not food companies
+
+OTHER GUIDANCE:
+- Luxury & Fashion: High-end fashion, luxury goods, designer brands (Fendi, Gucci, Louis Vuitton)
+- Tech & Wireless: Telecom, mobile carriers, technology companies (Verizon, Apple, Samsung)
+- Sports & Fitness: Fitness equipment, athletic brands, gyms (Peloton, Nike, Equinox)
+- Finance & Insurance: Banks, credit cards, insurance (Chase, Amex, State Farm)
 - Auto: Car manufacturers, dealerships (Ford, Toyota, BMW)
-- Entertainment: Streaming, media, entertainment companies (Netflix, Disney, Spotify)
+- Entertainment: Streaming, media, gaming (Netflix, Disney, Spotify, Xbox)
 - Travel & Hospitality: Hotels, airlines, travel services (Marriott, Delta, Airbnb)
-- Retail & E-Commerce: General retail stores, e-commerce (Target, Amazon, Walmart)
 - Health & Pharma: Healthcare, pharmaceuticals, wellness brands
 - Home & DIY: Home improvement, furniture, home goods
 - Alcohol & Spirits: Beer, wine, spirits brands
 - CPG: Consumer packaged goods, grocery items, household products (Tide, Clorox, Kraft)
-- B2B & Professional Services: Enterprise software, consulting, business services
 
 RESPOND WITH ONLY THE CATEGORY NAME, nothing else."""
 
@@ -1029,6 +1097,118 @@ def get_brand_categories(brand_name: str) -> List[str]:
     if lowered in DUAL_ANCHOR_BRANDS:
         return DUAL_ANCHOR_BRANDS[lowered]
     return []
+
+
+def detect_meaning_tags(brand_name: str, brief: str) -> Set[str]:
+    """Lightweight meaning detection to loosen category hard-lock for edge briefs."""
+    text = f"{brand_name} {brief}".lower()
+    tags: Set[str] = set()
+
+    pet_kw = ["pet", "dog", "cat", "groom", "walker", "vet", "animal", "kennel"]
+    edu_kw = ["school", "university", "college", "degree", "course", "learning", "education", "training", "students"]
+    civic_kw = [
+        "vote", "voter", "election", "campaign", "candidate", "civic", "policy", "mayor", "council", "constituent",
+        "congress", "congressional", "senate", "senator", "representative", "governor", "gubernatorial",
+        "primary", "district", "democrat", "republican", "ballot", "running for"
+    ]
+    local_kw = ["local", "neighborhood", "community", "dma", "city", "town"]
+    platform_kw = ["app", "platform", "marketplace", "delivery", "on-demand", "rideshare", "driver", "rider"]
+    food_kw = ["restaurant", "food", "eats", "meal", "dining", "delivery", "kitchen", "menu", "order"]
+
+    if any(k in text for k in pet_kw):
+        tags.add("pet")
+        tags.add("local_service")
+    if any(k in text for k in edu_kw):
+        tags.add("education")
+    if any(k in text for k in civic_kw):
+        tags.add("civic")
+        tags.add("local_service")
+    if any(k in text for k in local_kw):
+        tags.add("local_service")
+    if any(k in text for k in platform_kw):
+        tags.add("platform")
+    if any(k in text for k in food_kw):
+        tags.add("food_service")
+
+    return tags
+
+
+def get_flexible_persona_pool(category: str, brand_name: str, brief: str) -> List[str]:
+    """
+    Build a category persona pool with meaning-led overlays.
+
+    - Keeps the category pool as the core.
+    - Adds dual-anchor brand pools (e.g., Uber → Tech + Travel).
+    - Adds meaning overlays for pet services, education, civic/local services.
+    - For civic/pet/education cases, PREPENDS those personas to increase selection likelihood.
+    """
+    tags = detect_meaning_tags(brand_name, brief)
+    
+    # For civic campaigns, PREPEND civic personas so they appear first in the pool
+    # This increases the likelihood the LLM will select them
+    priority_personas: List[str] = []
+    
+    if "civic" in tags:
+        # These are the MUST-HAVE civic personas - put them FIRST
+        priority_personas.extend([
+            "Neighborhood Watch", "Volunteer", "Faith", "Believer", "Hometown Hero",
+            "Main Street", "PTA", "Mayor", "Southern Hospitality", "Legacy",
+            "Family Table", "Caregiver", "Single Parent", "Empty Nester", "Planner",
+            "Cultural Harmonist", "Optimist", "Social Architect"
+        ])
+    
+    if "pet" in tags:
+        # Pet personas first for pet services
+        priority_personas.extend([
+            "Dog Parent", "Cat Person", "Pack Leader", "Rescuer", "Pawrent",
+            "Petfluencer", "Best in Show", "Lulu", "Neighborhood Watch", "Volunteer"
+        ])
+    
+    if "education" in tags:
+        # Education/learner personas first
+        priority_personas.extend([
+            "Scholar", "Planner", "Mentor", "Coach", "Self-Love", "Legacy",
+            "Single Parent", "Caregiver", "Empty Nester", "Retiree", "Digital Nomad"
+        ])
+    
+    # Start with priority personas, then add category pool
+    base_pool = list(priority_personas)
+    base_pool.extend(CATEGORY_PERSONA_MAP.get(category, []))
+
+    # Dual-anchor: union both category pools
+    dual_categories = DUAL_ANCHOR_BRANDS.get(brand_name.lower().strip(), [])
+    for dual_cat in dual_categories:
+        if dual_cat != category:
+            base_pool.extend(CATEGORY_PERSONA_MAP.get(dual_cat, []))
+
+    # Add remaining overlays (for cases not covered by priority)
+    if "pet" in tags:
+        base_pool.extend(PET_SERVICE_PERSONAS)
+    if "education" in tags:
+        base_pool.extend(EDUCATION_PERSONAS)
+    if "civic" in tags:
+        base_pool.extend(CIVIC_PERSONAS)
+    if "local_service" in tags:
+        # Local services benefit from community + pet overlays
+        base_pool.extend(PET_SERVICE_PERSONAS)
+        base_pool.extend(CIVIC_PERSONAS)
+    if "platform" in tags and dual_categories:
+        # Already handled by dual anchor union; no-op here but kept for clarity
+        pass
+    # Platform + food: allow QSR/Culinary delivery patterns when brief implies food delivery
+    if "platform" in tags and "food_service" in tags:
+        base_pool.extend(CATEGORY_PERSONA_MAP.get("QSR", []))
+        base_pool.extend(CATEGORY_PERSONA_MAP.get("Culinary & Dining", []))
+
+    # Deduplicate while preserving order (priority personas stay first)
+    seen: Set[str] = set()
+    deduped: List[str] = []
+    for name in base_pool:
+        if name not in seen:
+            seen.add(name)
+            deduped.append(name)
+
+    return deduped
 
 
 def get_category_personas(category: str) -> List[str]:
