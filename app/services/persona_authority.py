@@ -49,9 +49,8 @@ from app.services.rjm_ingredient_canon import (
     is_deprecated_persona,
     is_hot_persona,
     get_rotation_weight,
-    # Meaning-led overlays
+    # Category pool (simplified - no hardcoded overlays)
     get_flexible_persona_pool,
-    detect_meaning_tags,
 )
 
 
@@ -220,12 +219,9 @@ class PersonaAuthority:
         self.min_phyla = min_phyla
         self.max_phylum_dominance = max_phylum_dominance
         
-        # Meaning-led flexible pool: category-first but with overlays for edge briefs
+        # Pure category pool (no hardcoded overlays - LLM handles meaning understanding)
         self.category_pool = get_flexible_persona_pool(category, brand_name, brief)
         self.category_pool_set = set(self.category_pool)
-
-        # Meaning tags for logging/debugging
-        self.meaning_tags = detect_meaning_tags(brand_name, brief)
 
         # Get category anchors
         self.anchors = get_dual_anchors(brand_name, category)
@@ -239,12 +235,11 @@ class PersonaAuthority:
         
         app_logger.info(
             f"PersonaAuthority initialized: category={category}, "
-            f"pool_size={len(self.category_pool)}, anchors={self.anchors}, "
-            f"meaning_tags={sorted(self.meaning_tags)}"
+            f"pool_size={len(self.category_pool)}, anchors={self.anchors}"
         )
 
     def _is_allowed_persona(self, name: str) -> bool:
-        """Allow personas that pass category check OR are in the flexible pool."""
+        """Allow personas that pass category check OR are in the category pool (for dual-anchor brands)."""
         if not name:
             return False
         if is_deprecated_persona(name):
@@ -256,7 +251,7 @@ class PersonaAuthority:
         if is_persona_valid_for_category(canonical, self.category):
             return True
 
-        # Meaning-led overlays (already merged into category_pool)
+        # Also allow if in the category pool (handles dual-anchor brands like Uber)
         return canonical in self.category_pool_set or name in self.category_pool_set
     
     def validate_persona(self, name: str) -> Tuple[bool, str, Optional[str]]:
@@ -289,9 +284,9 @@ class PersonaAuthority:
         if is_deprecated_persona(canonical):
             return False, name, f"Deprecated/sunset persona '{canonical}' - not in active canon"
         
-        # Flexible allow: category guardrail OR meaning-led pool
+        # Category guardrail
         if not self._is_allowed_persona(canonical):
-            return False, name, f"Not valid for category '{self.category}' (meaning tags={sorted(self.meaning_tags)})"
+            return False, name, f"Not valid for category '{self.category}'"
         
         return True, canonical, None
     
@@ -508,9 +503,9 @@ class PersonaAuthority:
         if is_deprecated_persona(canonical):
             return False, persona_name, f"Persona '{persona_name}' is deprecated/sunset"
         
-        # Validate against category guardrail OR meaning-led pool
+        # Validate against category guardrail
         if not self._is_allowed_persona(canonical):
-            return False, persona_name, f"Persona '{persona_name}' not valid for category '{self.category}' (meaning tags={sorted(self.meaning_tags)})"
+            return False, persona_name, f"Persona '{persona_name}' not valid for category '{self.category}'"
         
         # Check if it's in the portfolio (try both original and singular forms)
         in_portfolio = self.context.is_in_portfolio(canonical)

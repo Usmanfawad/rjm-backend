@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import random
 from collections import deque
-from typing import Dict, List, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 from app.config.logger import app_logger
 
@@ -1099,115 +1099,169 @@ def get_brand_categories(brand_name: str) -> List[str]:
     return []
 
 
+def analyze_brand_context(brand_name: str, brief: str, category: str) -> Dict[str, Any]:
+    """
+    Use LLM to deeply understand the brand context BEFORE persona selection.
+    
+    This is the KEY FIX for the "sequencing problem" Jesse identified:
+    - The system was deciding WHO the audience is before understanding WHAT the product/service is
+    - Now we understand the brand FIRST, then let persona selection follow the meaning
+    
+    This replaces all hardcoded heuristics (detect_meaning_tags, get_flexible_persona_pool prepending)
+    with intelligent LLM-based brand understanding.
+    
+    Returns a dict with:
+    - audience_type: "consumer" | "b2b" | "civic" | "mixed"
+    - persona_guidance: LLM-generated guidance for persona selection
+    - avoid_personas: List of persona types to avoid
+    - prioritize_personas: List of persona types to prioritize
+    """
+    from app.config.settings import settings
+    from app.services.rjm_vector_store import get_openai_client
+    
+    system_prompt = """You are an expert brand strategist analyzing a brand to guide persona selection.
+Your job is to understand WHAT the brand/service actually is and WHO the real audience is.
+
+CRITICAL CLASSIFICATION RULES:
+
+1. POLITICAL/CIVIC CAMPAIGNS (Congress, Senate, Mayor, Governor, ballot measures, political candidates):
+   - audience_type: MUST be "civic"
+   - PRIORITIZE: Neighborhood Watch, Volunteer, Faith, Hometown Hero, Main Street, PTA, Mayor
+   - AVOID: Budget-Minded, Bargain Hunter, Savvy Shopper, Gifter (these are shopping personas)
+   - Voters are CONSTITUENTS, not shoppers
+
+2. PET SERVICES (dog walking, pet grooming, pet sitting, veterinary, pet care):
+   - audience_type: "pet_service"
+   - PRIORITIZE: Dog Parent, Pack Leader, Pawrent, Rescuer, Petfluencer, Best in Show
+   - AVOID: Budget-Minded, Bargain Hunter, Savvy Shopper as HIGHLIGHTS (ok in portfolio)
+   - Pet owners define themselves by their relationship with pets
+
+3. FITNESS/WELLNESS BRANDS (gyms, fitness studios, workout apps):
+   - audience_type: "fitness"
+   - PRIORITIZE: Gym Obsessed, Elite Competitor, Sculpt, Biohacker, Weekend Warrior
+   - AVOID: Neighborhood Watch, Volunteer, PTA (civic personas don't fit fitness)
+
+4. HEALTH SUPPLEMENTS (vitamins, gut health, wellness products):
+   - audience_type: "wellness"
+   - PRIORITIZE: Biohacker, Clean Eats, Self-Love, Detox, Modern Monk
+   - AVOID: Civic personas like Neighborhood Watch, Volunteer
+
+5. EDUCATION/TRAINING (universities, online learning, courses):
+   - audience_type: "learner"
+   - PRIORITIZE: Scholar, Planner, Mentor, Coach, Self-Love, Digital Nomad
+   - AVOID: Power Broker, Boss, Disruptor unless targeting executives
+
+6. SPORTS TEAMS (NBA, NFL, MLB teams, ticket sales):
+   - audience_type: "sports"
+   - PRIORITIZE: Elite Competitor, Weekend Warrior, Basketball Junkie, Sports Parent, Fantasy GM
+   - This is correct, no changes needed
+
+Respond in JSON format:
+{
+  "brand_understanding": "1-2 sentence description of what this brand/service actually is",
+  "audience_type": "consumer" | "civic" | "pet_service" | "fitness" | "wellness" | "learner" | "sports",
+  "persona_guidance": "Clear guidance for persona selection",
+  "prioritize_personas": ["specific persona names to use"],
+  "avoid_personas": ["specific persona names to avoid"]
+}"""
+
+    user_prompt = f"""Brand: {brand_name}
+Category: {category}
+Brief: {brief}
+
+Analyze this brand and provide persona selection guidance."""
+
+    try:
+        client = get_openai_client()
+        completion = client.chat.completions.create(
+            model=settings.OPENAI_MODEL,
+            temperature=0.1,  # Low temperature for consistency
+            max_tokens=500,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+        )
+        
+        response = completion.choices[0].message.content.strip()
+        
+        # Parse JSON response
+        import json
+        # Handle potential markdown code blocks
+        if response.startswith("```"):
+            response = response.split("```")[1]
+            if response.startswith("json"):
+                response = response[4:]
+        
+        result = json.loads(response)
+        app_logger.info(
+            f"Brand context analysis for '{brand_name}': "
+            f"audience_type={result.get('audience_type')}, "
+            f"prioritize={result.get('prioritize_personas', [])[:3]}"
+        )
+        return result
+        
+    except Exception as exc:
+        app_logger.warning(f"Brand context analysis failed for '{brand_name}': {exc}")
+        # Return neutral guidance if LLM fails
+        return {
+            "brand_understanding": f"{brand_name} campaign",
+            "audience_type": "consumer",
+            "persona_guidance": "Select personas that match the category and brief meaning",
+            "prioritize_personas": [],
+            "avoid_personas": [],
+        }
+
+
 def detect_meaning_tags(brand_name: str, brief: str) -> Set[str]:
-    """Lightweight meaning detection to loosen category hard-lock for edge briefs."""
-    text = f"{brand_name} {brief}".lower()
-    tags: Set[str] = set()
-
-    pet_kw = ["pet", "dog", "cat", "groom", "walker", "vet", "animal", "kennel"]
-    edu_kw = ["school", "university", "college", "degree", "course", "learning", "education", "training", "students"]
-    civic_kw = [
-        "vote", "voter", "election", "campaign", "candidate", "civic", "policy", "mayor", "council", "constituent",
-        "congress", "congressional", "senate", "senator", "representative", "governor", "gubernatorial",
-        "primary", "district", "democrat", "republican", "ballot", "running for"
-    ]
-    local_kw = ["local", "neighborhood", "community", "dma", "city", "town"]
-    platform_kw = ["app", "platform", "marketplace", "delivery", "on-demand", "rideshare", "driver", "rider"]
-    food_kw = ["restaurant", "food", "eats", "meal", "dining", "delivery", "kitchen", "menu", "order"]
-
-    if any(k in text for k in pet_kw):
-        tags.add("pet")
-        tags.add("local_service")
-    if any(k in text for k in edu_kw):
-        tags.add("education")
-    if any(k in text for k in civic_kw):
-        tags.add("civic")
-        tags.add("local_service")
-    if any(k in text for k in local_kw):
-        tags.add("local_service")
-    if any(k in text for k in platform_kw):
-        tags.add("platform")
-    if any(k in text for k in food_kw):
-        tags.add("food_service")
-
-    return tags
+    """
+    DEPRECATED: This function has been disabled to prevent hardcoded heuristics
+    from causing persona selection issues (civic bleed, wrong persona clusters).
+    
+    The LLM now handles all brand understanding and persona selection through
+    the analyze_brand_context() function which makes intelligent decisions
+    based on the actual meaning of the brief, not keyword matching.
+    
+    Returns an empty set. Brand understanding is now handled by LLM calls.
+    """
+    # All meaning detection is now handled by LLM in analyze_brand_context()
+    # This prevents false positives like "community fitness" triggering civic personas
+    return set()
 
 
 def get_flexible_persona_pool(category: str, brand_name: str, brief: str) -> List[str]:
     """
-    Build a category persona pool with meaning-led overlays.
-
-    - Keeps the category pool as the core.
-    - Adds dual-anchor brand pools (e.g., Uber → Tech + Travel).
-    - Adds meaning overlays for pet services, education, civic/local services.
-    - For civic/pet/education cases, PREPENDS those personas to increase selection likelihood.
+    Build a category persona pool.
+    
+    SIMPLIFIED VERSION: Returns the pure category pool without hardcoded prepending.
+    The LLM is now responsible for intelligent persona selection based on the
+    analyze_brand_context() function which understands the brand's meaning.
+    
+    This prevents:
+    - Civic personas bleeding into fitness brands
+    - Budget-Minded cluster appearing in wrong categories
+    - Community personas appearing in individual-focused brands
+    
+    The LLM receives the category pool and selects personas that match the
+    MEANING expressed in the brief and write-ups, guided by prompts, not heuristics.
     """
-    tags = detect_meaning_tags(brand_name, brief)
+    # Start with pure category pool
+    base_pool = list(CATEGORY_PERSONA_MAP.get(category, []))
     
-    # For civic campaigns, PREPEND civic personas so they appear first in the pool
-    # This increases the likelihood the LLM will select them
-    priority_personas: List[str] = []
-    
-    if "civic" in tags:
-        # These are the MUST-HAVE civic personas - put them FIRST
-        priority_personas.extend([
-            "Neighborhood Watch", "Volunteer", "Faith", "Believer", "Hometown Hero",
-            "Main Street", "PTA", "Mayor", "Southern Hospitality", "Legacy",
-            "Family Table", "Caregiver", "Single Parent", "Empty Nester", "Planner",
-            "Cultural Harmonist", "Optimist", "Social Architect"
-        ])
-    
-    if "pet" in tags:
-        # Pet personas first for pet services
-        priority_personas.extend([
-            "Dog Parent", "Cat Person", "Pack Leader", "Rescuer", "Pawrent",
-            "Petfluencer", "Best in Show", "Lulu", "Neighborhood Watch", "Volunteer"
-        ])
-    
-    if "education" in tags:
-        # Education/learner personas first
-        priority_personas.extend([
-            "Scholar", "Planner", "Mentor", "Coach", "Self-Love", "Legacy",
-            "Single Parent", "Caregiver", "Empty Nester", "Retiree", "Digital Nomad"
-        ])
-    
-    # Start with priority personas, then add category pool
-    base_pool = list(priority_personas)
-    base_pool.extend(CATEGORY_PERSONA_MAP.get(category, []))
-
-    # Dual-anchor: union both category pools
+    # Dual-anchor: union both category pools (for known dual-category brands like Uber)
     dual_categories = DUAL_ANCHOR_BRANDS.get(brand_name.lower().strip(), [])
     for dual_cat in dual_categories:
         if dual_cat != category:
             base_pool.extend(CATEGORY_PERSONA_MAP.get(dual_cat, []))
-
-    # Add remaining overlays (for cases not covered by priority)
-    if "pet" in tags:
-        base_pool.extend(PET_SERVICE_PERSONAS)
-    if "education" in tags:
-        base_pool.extend(EDUCATION_PERSONAS)
-    if "civic" in tags:
-        base_pool.extend(CIVIC_PERSONAS)
-    if "local_service" in tags:
-        # Local services benefit from community + pet overlays
-        base_pool.extend(PET_SERVICE_PERSONAS)
-        base_pool.extend(CIVIC_PERSONAS)
-    if "platform" in tags and dual_categories:
-        # Already handled by dual anchor union; no-op here but kept for clarity
-        pass
-    # Platform + food: allow QSR/Culinary delivery patterns when brief implies food delivery
-    if "platform" in tags and "food_service" in tags:
-        base_pool.extend(CATEGORY_PERSONA_MAP.get("QSR", []))
-        base_pool.extend(CATEGORY_PERSONA_MAP.get("Culinary & Dining", []))
-
-    # Deduplicate while preserving order (priority personas stay first)
+    
+    # Deduplicate while preserving order
     seen: Set[str] = set()
     deduped: List[str] = []
     for name in base_pool:
         if name not in seen:
             seen.add(name)
             deduped.append(name)
-
+    
     return deduped
 
 

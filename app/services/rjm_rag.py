@@ -23,6 +23,8 @@ from app.services.rjm_ingredient_canon import (
     get_multicultural_expressions,
     is_local_brief,
     get_local_culture_segment,
+    # LLM-based brand understanding
+    analyze_brand_context,
 )
 from app.services.rjm_vector_store import (
     PINECONE_NAMESPACE,
@@ -45,193 +47,82 @@ ACTIVATION_PLAN_CANON: list[str] = [
 ]
 
 
-def _build_meaning_hint(meaning_tags: set, brand_name: str, brief: str) -> str:
+def _build_meaning_hint_from_analysis(brand_analysis: dict) -> str:
     """
-    Build contextual hints for the LLM based on meaning signals in the brief.
+    Build STRONG contextual guidance from LLM-generated brand analysis.
     
-    These hints guide persona selection toward the REAL audience without hard-coding
-    categories. The LLM still decides, but it receives strong guidance to avoid
-    defaulting to generic business/hustle personas for edge cases.
+    This REPLACES the old hardcoded _build_meaning_hint() function.
+    The guidance here OVERRIDES default category pool selection when the brand
+    meaning requires specific personas.
     """
+    if not brand_analysis:
+        return ""
+    
     hints = []
-    text_lower = f"{brand_name} {brief}".lower()
+    audience_type = brand_analysis.get("audience_type", "consumer")
     
-    # ═══════════════════════════════════════════════════════════════════════════
-    # EDUCATION / LEARNING / TRAINING
-    # Problem: LLM defaults to Power Broker, Boss, Visionary for education brands
-    # Solution: Bias toward learner/growth personas, add caregiver/flex-life
-    # ═══════════════════════════════════════════════════════════════════════════
-    if "education" in meaning_tags or any(k in text_lower for k in [
-        "university", "college", "degree", "enrollment", "student", "learning",
-        "course", "training", "certificate", "online education", "adult learner"
-    ]):
-        hints.append(
-            "EDUCATION/LEARNING CONTEXT: The real audience is learners, not executives. "
-            "PRIORITIZE these personas in highlights and portfolio:\n"
-            "- Scholar, Planner, Mentor, Coach (education & growth phylum)\n"
-            "- Single Parent, Caregiver, Empty Nester, Retiree (flex-life/returning learners)\n"
-            "- Legacy, Self-Love, Optimist (personal growth motivation)\n"
-            "- Digital Nomad (online/remote learning)\n"
-            "AVOID over-indexing on: Power Broker, Boss, Disruptor, Prime Mover, Maverick "
-            "(these are corporate hustle personas, not learner personas). "
-            "Max 2-3 hustle personas if relevant; the rest should be learner/growth-focused."
-        )
+    # Add the brand understanding
+    brand_understanding = brand_analysis.get("brand_understanding", "")
+    if brand_understanding:
+        hints.append(f"BRAND CONTEXT: {brand_understanding}")
     
-    # ═══════════════════════════════════════════════════════════════════════════
-    # CIVIC / POLITICAL / VOTER CAMPAIGNS
-    # Problem: LLM defaults to Power Broker, Boss, Visionary for civic campaigns
-    # Solution: Bias toward community/local personas
-    # ═══════════════════════════════════════════════════════════════════════════
-    if "civic" in meaning_tags or any(k in text_lower for k in [
-        "vote", "voter", "election", "campaign", "candidate", "democrat", "republican",
-        "ballot", "mayor", "council", "constituent", "civic", "political", "policy",
-        "congress", "congressional", "senate", "senator", "representative", "governor",
-        "gubernatorial", "primary", "district", "running for"
-    ]):
-        hints.append(
-            "⚠️ CRITICAL - CIVIC/POLITICAL CAMPAIGN DETECTED ⚠️\n"
-            "This is a VOTER campaign, NOT a business. The audience is CONSTITUENTS and COMMUNITY MEMBERS.\n\n"
-            "YOU MUST INCLUDE THESE PERSONAS IN HIGHLIGHTS (pick 2-3 from this list):\n"
-            "- Neighborhood Watch (community vigilance and local pride)\n"
-            "- Volunteer (civic engagement and giving back)\n"
-            "- Faith / Believer (values-driven voters)\n"
-            "- Hometown Hero (local pride and community trust)\n"
-            "- Main Street (everyday local citizens)\n\n"
-            "YOU MUST INCLUDE THESE PERSONAS IN PORTFOLIO (pick at least 8 from this list):\n"
-            "- Neighborhood Watch, Volunteer, PTA, Main Street, Mayor\n"
-            "- Southern Hospitality, Hometown Hero, Faith, Believer\n"
-            "- Legacy, Family Table, Empty Nester, Caregiver, Single Parent\n"
-            "- Planner, Cultural Harmonist, Optimist\n\n"
-            "DO NOT USE these business/hustle personas for political campaigns:\n"
-            "- Power Broker, Boss, Visionary, Disruptor, Entrepreneur, Prime Mover, Maverick, Trader, Upstart\n"
-            "- These are CORPORATE personas — voters are NOT executives\n\n"
-            "The highlights and portfolio MUST reflect community values, local trust, and civic engagement."
-        )
+    # CRITICAL: For civic/voter campaigns, OVERRIDE default CPG personas
+    if audience_type == "civic":
+        hints.append("""
+⚠️ MANDATORY CIVIC CAMPAIGN OVERRIDE ⚠️
+This is a POLITICAL/VOTER campaign. The audience is CONSTITUENTS, not shoppers.
+
+YOU MUST SELECT THESE PERSONAS FOR HIGHLIGHTS (pick 3-4):
+- Neighborhood Watch, Volunteer, Faith, Hometown Hero, Main Street
+
+YOU MUST INCLUDE THESE IN PORTFOLIO:
+- Neighborhood Watch, Volunteer, Faith, Believer, Hometown Hero, Main Street, PTA, Mayor
+- Legacy, Family Table, Empty Nester, Caregiver, Southern Hospitality
+- Cultural Harmonist, Optimist, Planner
+
+DO NOT SELECT these shopping personas for political campaigns:
+- Budget-Minded, Bargain Hunter, Savvy Shopper, Gifter, New Parent
+- These are CONSUMER SHOPPING personas, NOT voter personas
+""")
     
-    # ═══════════════════════════════════════════════════════════════════════════
-    # PET SERVICES / ANIMAL CARE
-    # Problem: LLM defaults to generic business personas for pet services
-    # Solution: Bias toward pet and community personas
-    # ═══════════════════════════════════════════════════════════════════════════
-    if "pet" in meaning_tags or any(k in text_lower for k in [
-        "dog", "cat", "pet", "animal", "vet", "grooming", "walker", "kennel", "adoption"
-    ]):
-        hints.append(
-            "PET/ANIMAL CARE CONTEXT: The real audience is pet owners and animal lovers. "
-            "PRIORITIZE these personas in highlights and portfolio:\n"
-            "- Dog Parent, Cat Person, Pack Leader, Rescuer, Pawrent, Petfluencer, Best in Show, Lulu (pets phylum)\n"
-            "- Neighborhood Watch, Volunteer, Main Street (local community)\n"
-            "- Caregiver, Single Parent, Empty Nester (caregiving mindset)\n"
-            "- Nature Lover, Hiker, Trailblazer (outdoor/active with pets)\n"
-            "AVOID: Power Broker, Boss, Visionary, Disruptor, Prime Mover "
-            "(these are corporate personas, not pet owner personas). "
-            "Focus on pet companionship and local community connection."
-        )
+    # For pet services, ensure pet personas are prioritized
+    elif audience_type == "pet_service" or "pet" in brand_understanding.lower() or "dog" in brand_understanding.lower():
+        hints.append("""
+⚠️ PET SERVICE OVERRIDE ⚠️
+This is a PET CARE service. The audience is PET OWNERS.
+
+YOU MUST SELECT THESE PERSONAS FOR HIGHLIGHTS (pick 3-4):
+- Dog Parent, Pack Leader, Pawrent, Rescuer, Petfluencer
+
+YOU MUST INCLUDE THESE IN PORTFOLIO (first positions):
+- Dog Parent, Pack Leader, Pawrent, Rescuer, Petfluencer, Best in Show, Lulu
+- Nature Lover, Hiker, Weekend Warrior, Caregiver
+
+DO NOT lead with shopping personas like:
+- Budget-Minded, Bargain Hunter, Savvy Shopper
+- These can appear in portfolio but NOT as highlights
+""")
     
-    # ═══════════════════════════════════════════════════════════════════════════
-    # LOCAL SERVICES / SMALL BUSINESS
-    # Problem: LLM defaults to generic business personas for local services
-    # Solution: Bias toward community and local personas
-    # ═══════════════════════════════════════════════════════════════════════════
-    if "local_service" in meaning_tags or any(k in text_lower for k in [
-        "local business", "neighborhood", "community service", "small business",
-        "family-owned", "family owned", "my shop", "my business", "local market"
-    ]):
-        hints.append(
-            "LOCAL SERVICE/SMALL BUSINESS CONTEXT: The real audience is local community members. "
-            "PRIORITIZE these personas in highlights and portfolio:\n"
-            "- Neighborhood Watch, Main Street, Volunteer, PTA, Mayor (community phylum)\n"
-            "- Southern Hospitality, Hometown Hero (local pride)\n"
-            "- Family Table, Host, Legacy (family/tradition)\n"
-            "- Budget-Minded, Savvy Shopper, Planner (practical local shoppers)\n"
-            "AVOID over-indexing on: Power Broker, Boss, Visionary, Disruptor "
-            "(these are enterprise/startup personas). "
-            "Focus on community connection and local trust."
-        )
-    
-    # ═══════════════════════════════════════════════════════════════════════════
-    # FOOD DELIVERY / PLATFORM + FOOD
-    # Problem: LLM picks dine-in/holiday personas for delivery platforms
-    # Solution: Bias toward delivery/quick-order personas
-    # ═══════════════════════════════════════════════════════════════════════════
-    if ("platform" in meaning_tags and "food_service" in meaning_tags) or any(k in text_lower for k in [
-        "delivery", "deliver", "doorstep", "food app", "order online", "mobile order",
-        "uber eats", "doordash", "grubhub", "postmates", "instacart"
-    ]):
-        hints.append(
-            "FOOD DELIVERY/PLATFORM CONTEXT: The real audience wants convenience and speed. "
-            "PRIORITIZE these personas in highlights and portfolio:\n"
-            "- Takeout Guru, Food Truckin', Caffeine Fiend, Extra Fries, Midnight Run (delivery/quick-order)\n"
-            "- Night Owl, Gamer, Digital Nomad (late-night/convenience seekers)\n"
-            "- Impulse Buyer, Road Trip, Backpacker (on-the-go)\n"
-            "- Taco Run, Pizza Night, Breakfast Burrito, Sweet Tooth (quick food occasions)\n"
-            "AVOID over-indexing on: Holiday Table, Gift Wrap, Faith, Believer "
-            "(these are sit-down/special occasion personas). "
-            "Include both QSR and Culinary anchors for delivery context."
-        )
-    
-    # ═══════════════════════════════════════════════════════════════════════════
-    # HEALTH / WELLNESS / FITNESS (non-pharma)
-    # Problem: LLM may default to generic personas for wellness brands
-    # Solution: Bias toward wellness and body culture personas
-    # ═══════════════════════════════════════════════════════════════════════════
-    if any(k in text_lower for k in [
-        "wellness", "fitness", "gym", "workout", "yoga", "meditation", "mindfulness",
-        "self-care", "mental health", "therapy", "coaching", "nutrition"
-    ]):
-        hints.append(
-            "WELLNESS/FITNESS CONTEXT: The real audience seeks health and personal growth. "
-            "PRIORITIZE these personas in highlights and portfolio:\n"
-            "- Self-Love, Biohacker, Gym Obsessed, Sculpt (wellness phylum)\n"
-            "- Clean Eats, Detox, Stretch, Step Counter, Hydrating (body culture)\n"
-            "- Morning Stroll, Hiker, Nature Lover, Trailblazer (active lifestyle)\n"
-            "- Modern Monk, Sanctuary, Journey, Optimist (mindfulness/spiritual)\n"
-            "AVOID over-indexing on: Power Broker, Boss, Disruptor "
-            "(unless the brief specifically targets executive wellness)."
-        )
-    
-    # ═══════════════════════════════════════════════════════════════════════════
-    # ENTERTAINMENT / STREAMING / GAMING
-    # Problem: May miss gaming or streaming-specific personas
-    # Solution: Bias toward entertainment and gaming personas
-    # ═══════════════════════════════════════════════════════════════════════════
-    if any(k in text_lower for k in [
-        "streaming", "netflix", "gaming", "esports", "twitch", "youtube", "podcast",
-        "content creator", "influencer", "social media", "tiktok"
-    ]):
-        hints.append(
-            "ENTERTAINMENT/STREAMING/GAMING CONTEXT: The real audience is content consumers and creators. "
-            "PRIORITIZE these personas in highlights and portfolio:\n"
-            "- Binge Watcher, Creator, Gamer, Influencer, Night Owl (entertainment phylum)\n"
-            "- Streamer Mode, LAN Party, Speedrunner, Controller Drop (gaming)\n"
-            "- Social Butterfly, Digital Nomad, Timothee (social/content)\n"
-            "- Vinyl, Backstage Pass, Coachella Mind, Rap Caviar (music/culture)\n"
-            "Focus on content consumption patterns and digital lifestyle."
-        )
-    
-    # ═══════════════════════════════════════════════════════════════════════════
-    # TRAVEL / HOSPITALITY
-    # Problem: May default to generic personas instead of travel-specific
-    # Solution: Bias toward travel and exploration personas
-    # ═══════════════════════════════════════════════════════════════════════════
-    if any(k in text_lower for k in [
-        "travel", "vacation", "hotel", "resort", "airline", "cruise", "destination",
-        "getaway", "trip", "tourism", "hospitality"
-    ]):
-        hints.append(
-            "TRAVEL/HOSPITALITY CONTEXT: The real audience seeks experiences and escape. "
-            "PRIORITIZE these personas in highlights and portfolio:\n"
-            "- Romantic Voyager, Retreat Seeker, Island Hopper, Backpacker (travel phylum)\n"
-            "- Digital Nomad, Road Trip, Weekend Warrior, Bond Tripper (exploration)\n"
-            "- Luxury Insider, Miami Vibe, Gatsby (aspirational travel)\n"
-            "- Planner, PreChecker (practical travel planning)\n"
-            "Focus on escape, discovery, and memorable experiences."
-        )
+    else:
+        # Standard guidance for other types
+        persona_guidance = brand_analysis.get("persona_guidance", "")
+        if persona_guidance:
+            hints.append(f"PERSONA SELECTION GUIDANCE: {persona_guidance}")
+        
+        prioritize = brand_analysis.get("prioritize_personas", [])
+        if prioritize:
+            prioritize_list = ", ".join(prioritize[:10])
+            hints.append(f"PRIORITIZE these personas in highlights and early portfolio: {prioritize_list}")
+        
+        avoid = brand_analysis.get("avoid_personas", [])
+        if avoid:
+            avoid_list = ", ".join(avoid[:10])
+            hints.append(f"DO NOT use these personas in highlights: {avoid_list}")
     
     if not hints:
         return ""
     
-    return "\n\n".join(hints)
+    return "\n".join(hints)
 
 
 def _build_system_prompt(
@@ -257,7 +148,7 @@ def _build_system_prompt(
     meaning_hint_text = ""
     if meaning_hint:
         meaning_hint_text = f"\n\nCONTEXTUAL HINTS (bias selection, do not break canon):\n{meaning_hint}\n"
-
+    
     return f"""You are MIRA, the RJM reasoning engine.
 You read Packaging Logic MASTER 10.22.25, the MIRA Packaging Implementation Spec 11.21.25,
 RJM Ingredient Canon 11.26.25, and the Phylum Index MASTER.
@@ -319,7 +210,7 @@ OUTPUT SCHEMA (JSON only):
 
 STRICT RULES:
 - PERSONAS ARRAY MUST CONTAIN EXACTLY 15 ENTRIES. This is mandatory. Count them.
-- Only the first 3-4 personas should have "highlight" values; the rest MUST have "highlight": null.
+- EXACTLY 4 PERSONAS must have "highlight" values (not 2, not 3 — exactly 4). The remaining 11 MUST have "highlight": null.
 - HIGHLIGHT FORMAT: The "highlight" field should contain ONLY the description (7-12 words), NOT the persona name.
   CRITICAL: Generate UNIQUE highlights specific to each persona AND the brand/category context. Do NOT reuse generic phrases across different personas or categories.
   Good examples by category:
@@ -327,9 +218,23 @@ STRICT RULES:
   - Finance persona: "Builds wealth through disciplined planning and smart decisions."
   - QSR persona: "Builds mealtime around pickup, drive-thru, and mobile order."
   - Retail persona: "Hunts for deals that stretch the family budget further."
-- Key Identifiers: exactly 4–5 bullets, 7–12 words, strategist tone. DO NOT end with periods — these flow into a sentence.
+  - Fitness persona: "Prioritizes wellness and personal improvement through consistent training."
+  - Wellness persona: "Seeks balance between mental clarity and physical vitality."
+- Key Identifiers: exactly 4 bullets, 7–12 words each, strategist tone.
+  CRITICAL LANGUAGE RULE: Key identifiers are NOUN PHRASES that describe brand attributes or audience values.
+  DO NOT start with verbs like "turn", "promotes", "emphasizes", "innovates", "delivers".
+  GOOD examples:
+    - "Winter warmth through seasonal flavors and comfort"
+    - "Convenient coffee options for on-the-go lifestyles"
+    - "Health-conscious choices driving personal wellness"
+    - "Community connection through shared fitness goals"
+  BAD examples (DO NOT USE):
+    - "Turn winter warmth into comfort" (starts with verb)
+    - "Promotes health through exercise" (starts with verb)
+    - "Innovates laundry solutions for families" (starts with verb)
 - Persona Insights: exactly 2 bullets. Percentages must be ONE high band (33–42%) and ONE low band (21–32%) with ≥5 points separation. Rationale describes behavior/mindset; persona nickname appears only at the end in quotes.
   Example: "35% who connect with weekend adventure and shared travel are \"Tailgater.\""
+  CRITICAL: Insight personas MUST be DIFFERENT from the 4 highlight personas. Do not repeat highlight personas in insights.
 - Demos: Always include Core and Secondary lines using RJM age-range format (e.g., "Adults 25–54"). Add Broad line when reach expansion is needed.
 - Generational Segments: Pick exactly 4 from the provided options (one per cohort: Gen Z, Millennial, Gen X, Boomer). Each must have a "highlight" (7-12 words, description only, no name prefix).
 - Activation Plan: Use the canonical 4 bullets verbatim.
@@ -427,6 +332,15 @@ def generate_program_with_rag(request: GenerateProgramRequest) -> ProgramJSON:
     app_logger.info(f"Category detected for '{request.brand_name}': {inferred_category}")
     category_personas = get_category_personas(inferred_category)
     
+    # KEY FIX: Use LLM to understand the brand BEFORE persona selection
+    # This solves the "sequencing problem" - understanding WHAT before deciding WHO
+    brand_analysis = analyze_brand_context(request.brand_name, request.brief, inferred_category)
+    app_logger.info(
+        f"Brand analysis for '{request.brand_name}': "
+        f"audience_type={brand_analysis.get('audience_type')}, "
+        f"prioritize={brand_analysis.get('prioritize_personas', [])[:3]}"
+    )
+    
     # Create PersonaAuthority for this generation (SINGLE SOURCE OF TRUTH)
     authority = PersonaAuthority(
         category=inferred_category,
@@ -434,13 +348,11 @@ def generate_program_with_rag(request: GenerateProgramRequest) -> ProgramJSON:
         brief=request.brief,
     )
 
-    meaning_tags = getattr(authority, "meaning_tags", set()) or set()
-
-    # Use the flexible pool (category + meaning overlays) for prompts
+    # Use pure category pool (no hardcoded prepending)
     category_personas = authority.category_pool
 
-    # Build meaning hints based on detected tags
-    meaning_hint = _build_meaning_hint(meaning_tags, request.brand_name, request.brief)
+    # Build meaning hints from LLM analysis (not hardcoded keyword matching)
+    meaning_hint = _build_meaning_hint_from_analysis(brand_analysis)
 
     generational_options = _build_generational_options()
 

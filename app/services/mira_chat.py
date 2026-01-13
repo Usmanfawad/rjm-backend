@@ -614,6 +614,24 @@ CATEGORY BOUNDARIES ARE STRICT:
 - Do NOT use "Budget-Minded" or "Bargain Hunter" for Luxury categories
 - Do NOT use "Luxury Insider" or "Glam Life" for QSR categories
 
+CRITICAL PERSONA-CATEGORY RULES (AVOID CIVIC BLEED):
+- FITNESS/WELLNESS BRANDS (gyms, Equinox, Planet Fitness, yoga studios, supplements):
+  → Use: Gym Obsessed, Elite Competitor, Sculpt, Biohacker, Self-Love, Clean Eats
+  → DO NOT use: Neighborhood Watch, Volunteer, PTA, Mayor, Faith, Believer
+  → Even if brief says "community fitness", these are INDIVIDUAL health goals, not civic engagement
+  
+- HEALTH SUPPLEMENTS (BioComplete, vitamins, gut health):
+  → Use: Biohacker, Clean Eats, Self-Love, Detox, Modern Monk, Optimist
+  → DO NOT use: Neighborhood Watch, Volunteer, Faith (NOT health personas)
+  
+- BIKE SHARING/URBAN MOBILITY (Citibike, Lime, Bird):
+  → Use: Hiker, Trailblazer, Weekend Warrior, Digital Nomad, Green Pioneer
+  → DO NOT use: Romantic Voyager, Island Hopper, Retreat Seeker (NOT urban commute personas)
+  
+- POLITICAL/CIVIC CAMPAIGNS (Congress, Mayor, ballot initiatives):
+  → Use: Neighborhood Watch, Volunteer, Faith, Hometown Hero, Main Street, PTA
+  → DO NOT use: Power Broker, Boss, Entrepreneur (voters are citizens, not executives)
+
 When discussing personas, ALWAYS refer to the personas that appear in the GENERATED PROGRAM.
 Do not mention generic persona names in conversation before seeing the actual program output.
 
