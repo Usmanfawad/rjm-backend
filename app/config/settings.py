@@ -40,7 +40,7 @@ class Settings(BaseSettings):
 
     # Local auth fallback (dev only)
     LOCAL_AUTH_SECRET: str = "JWT_SECRET_KEY"
-    LOCAL_AUTH_TOKEN_EXP_SECONDS: int = 3600
+    LOCAL_AUTH_TOKEN_EXP_SECONDS: int = 14400  # 4 hours
 
     @computed_field
     @property
@@ -69,7 +69,7 @@ class Settings(BaseSettings):
 
     # OpenAI settings
     OPENAI_API_KEY: str = ""
-    OPENAI_MODEL: str = "gpt-4o-mini"
+    OPENAI_MODEL: str = "gpt-5"
     OPENAI_TEMPERATURE: float = 0.7
     OPENAI_MAX_TOKENS: int = 1000
     OPENAI_TOP_P: float = 1.0
@@ -96,5 +96,7 @@ class Settings(BaseSettings):
     # RJM document corpus settings
     RJM_DOCS_DIR: str = "rjm_docs"  # Directory (relative to project root) containing RJM *.txt docs
 
+    # Tavily Search API (for brand research)
+    TAVILY_API_KEY: str = "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"
 
 settings = Settings()

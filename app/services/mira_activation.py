@@ -182,18 +182,22 @@ def build_activation_plan(
         )
 
     # Build channel deployment based on media mix
+    # NOTE: Using strategic descriptions instead of specific percentages
+    # The actual percentages are computed dynamically and available in reasoning_ctx.media_mix
     mix = reasoning_ctx.media_mix
-    ctv_weight = mix.get("CTV", "35-45%")
-    olv_weight = mix.get("OLV", "30-35%")
-    audio_weight = mix.get("Audio", "15-20%")
-    display_weight = mix.get("Display", "10-15%")
 
-    channel_deployment = (
-        f"CTV ({ctv_weight}) for cultural presence, "
-        f"OLV ({olv_weight}) for reinforcement, "
-        f"Audio ({audio_weight}) for ritual and frequency, "
-        f"Display ({display_weight}) for precision support."
-    )
+    # Build strategic channel deployment without reciting percentages
+    channel_descriptions = []
+    if "CTV" in mix:
+        channel_descriptions.append("CTV as the cultural anchor for storytelling and emotional connection")
+    if "OLV" in mix:
+        channel_descriptions.append("OLV for brand reinforcement and consideration")
+    if "Audio" in mix:
+        channel_descriptions.append("Audio for ritual moments and frequency")
+    if "Display" in mix:
+        channel_descriptions.append("Display for precision targeting and conversion support")
+
+    channel_deployment = "; ".join(channel_descriptions) + "."
 
     # Build deal/packaging description
     if reasoning_ctx.platform_path == "DSP":

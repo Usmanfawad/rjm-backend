@@ -7,6 +7,7 @@ from app.models.user_connector import UserConnector
 from app.models.audit_log import AuditLog
 from app.models.rjm_document import RJMDocument
 from app.models.persona_generation import PersonaGeneration
+from app.models.chat_session import ChatSession, ChatMessage
 
 __all__ = [
     "TestItem",
@@ -15,4 +16,6 @@ __all__ = [
     "AuditLog",
     "RJMDocument",
     "PersonaGeneration",
+    "ChatSession",
+    "ChatMessage",
 ]

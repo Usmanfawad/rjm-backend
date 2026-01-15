@@ -1,4 +1,4 @@
-RJM Phylum Index MASTER 10.22.25 (Need to build 39 new personas)
+RJM Phylum Index & Ingredient Canon MASTER 1.3.26
 The Phylum Index is the ingredient map for every RJM campaign.
 It defines where all active cultural components live and how they combine to form a complete
 Brand Campaign Meal.
@@ -7,6 +7,7 @@ Purpose
 • Aligns creative meaning and commercial scale under one consistent structure.
 • Provides every ingredient needed for packaging and activation.
 How It Works
+• Category → Persona Map = the PRIMARY SELECTOR — determines which personas are valid for each brand's advertising category
 • Phylums = the cultural lanes that organize meaning.
 • Personas = the core proteins — the emotional and behavioral center of every program.
 • Ad-Category Anchors = the salt and pepper — market verticals that season and scale each
@@ -17,12 +18,106 @@ mindset context.
 needed.
 Usage
 • Builders pull directly from this index to assemble complete RJM programs.
+• CRITICAL: Always check Category → Persona Map FIRST before selecting personas.
 • Personas appear in only one phylum; ad-category and generational anchors may appear in
 multiple lanes where relevant.
 • Local Culture lives outside the index as geographic context, referenced when a campaign
 activates in a specific market.
 This file is a live reference for MIRA, Foreman, and every program builder — the kitchen manual
 for how Real Juice Media makes culture programmable.
+⸻
+SECTION 0 — CATEGORY → PERSONA MAP (PRIMARY SELECTOR)
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL: This is the FIRST and PRIMARY selector for every persona program.
+Before selecting ANY persona, identify the brand's advertising category and
+ONLY select personas from that category's approved list below.
+
+DO NOT mix personas across categories. For example:
+- "Fast Fashionista" is ONLY valid for Luxury & Fashion — NOT for CPG
+- "Budget-Minded" is ONLY valid for CPG — NOT for Luxury & Fashion
+- "Revved" is ONLY valid for Auto — NOT for Finance
+═══════════════════════════════════════════════════════════════════════════════
+⸻
+B2B & Professional Services
+Power Broker • Boss • Visionary • Palo Alto • Upstart • Prime Mover • Disruptor • Maverick
+• Trader • Entrepreneur • Builder • Innovator • Scholar • Techie • Digital Nomad • Architect
+• Potomac Power • Gordon Gecko • Planner • Legacy • LeBron • Matador • QB • Coach
+• Mentor • Modern Monk • Reader • Writer • Journey • Morning Commute • After Hours
+• Sideways • Trailblazer
+⸻
+CPG (Consumer Packaged Goods)
+Budget-Minded • Bargain Hunter • Savvy Shopper • Planner • Single Parent • Caregiver
+• New Parent • Weekend Warrior • Gifter • Road Trip • Chef • Garden Gourmet • Self-Love
+• Optimist • Alchemist • Impulse Buyer • Cultural Harmonist • Legacy • The Fixer • Retiree
+• Julia • Oprah • Stylista • Romantic Voyager • Southern Hospitality • Empty Nester
+• Point Warrior • Design Maven • Clean Eats • Detox • Stretch • Hydrating • Step Counter
+• Sideways • Sweet Tooth • Gift Wrap • Family Table • Sunday Reset • Morning Commute
+• After Hours • Host • Holiday Table • Trailblazer • Faith • Believer • Off the Grid
+• Neighborhood Watch • Volunteer • PTA • Pack Leader • Cat Person • Dog Parent • Rescuer
+⸻
+Tech & Wireless
+Techie • Influencer • Gamer • Visionary • Digital Nomad • Power Broker • Luxury Insider
+• Creator • Maverick • Timothée • Fast Fashionista • Closet Runway • Sneakerhead • Stylista
+• Hype Seeker • Boss • Palo Alto • Upstart • Prime Mover • Hollywood Hills • Bond Tripper
+• Crypto Bro • Smart Home • Binge Watcher • Streamer • Early Adopter • Builder • Disruptor
+⸻
+Culinary & Dining
+Chef • Pit Master • Bourdain Mode • Michelin Chaser • Garden Gourmet • Nightcapper
+• Takeout Guru • Food Truckin' • Caffeine Fiend • Bartender • Taco Run • Julia • Host
+• Influencer • Epicurean • Wine & Dine • Brunch Life • Foodstagrammer • Grillmaster
+• Local Foodie • Comfort Seeker
+⸻
+Auto
+Revved • Fast Lane • Road Trip • Weekend Warrior • Luxury Insider • Gearhead • Green Pioneer
+• Modern Tradesman • Legacy • Empty Nester • Bond Tripper • Detroit Grit • Maverick
+• Tech Forward • Family Hauler • Adventure Seeker • Commuter • Classic Car • Off-Roader
+⸻
+Entertainment
+Binge Watcher • Influencer • Creator • Streamer • Swiftie • Gamer • Night Owl • Podcast Junkie
+• Film Buff • Timothée • Sports Enthusiast • Music Maven • Reality Watcher • Pop Culture Junkie
+• Superhero Fan • True Crime • Documentary Devotee
+⸻
+Travel & Hospitality
+Romantic Voyager • Retreat Seeker • Island Hopper • Backpacker • Digital Nomad • Road Trip
+• Bond Tripper • Weekend Warrior • Yellowstoner • Beach Bum • Luxury Insider • Pre Checker
+• Points Hacker • Jetsetter • Staycationer • Adventure Seeker • Wellness Traveler
+⸻
+Retail & E-Commerce
+Savvy Shopper • Bargain Hunter • Impulse Buyer • Point Warrior • Stylista • Fast Fashionista
+• Closet Runway • Sneakerhead • Budget-Minded • Gifter • Vintage Stylist • Trendsetter
+• Personal Shopper • Deal Hunter • Brand Loyalist • Window Shopper
+⸻
+Health & Pharma
+Biohacker • Optimist • Gym Obsessed • Detox • Wellness Seeker • Caregiver • Clean Eats
+• Stretch • Hydrating • Self-Love • Step Counter • New Parent • Retiree • Chronic Care
+• Mental Health Advocate • Holistic Healer • Fitness Enthusiast
+⸻
+Finance & Insurance
+Power Broker • Boss • QB • Gordon Gecko • Upstart • Planner • Legacy • Trader • Innovator
+• Entrepreneur • Builder • Scholar • Wealth Manager • First-Time Buyer • Homeowner
+• Investor • Retirement Planner • Side Hustler • Crypto Curious
+⸻
+Home & DIY
+Design Maven • Renovator • Garden Gourmet • Fixer • Planner • Empty Nester • New Parent
+• Legacy • Smart Home • Minimalist • Maximalist • Sustainable Living • First-Time Homeowner
+• Weekend Warrior • Collector • Nester
+⸻
+Luxury & Fashion
+Closet Runway • Fast Fashionista • Couture Curator • Stylista • Hype Seeker • Glam Life
+• Devil Wears • Luxury Insider • Hollywood Hills • Socialite • Gatsby • Hepburn • Miami Vibe
+• Design Maven • Influencer • Brand Devotee • Vintage Collector • Trendsetter
+⸻
+Alcohol & Spirits
+Sideways • Nightcapper • Bartender • Bourbon Streeter • Wine Enthusiast • Craft Beer
+• Cocktail Curator • Social Drinker • Connoisseur • Tailgater • Host • Celebrator
+⸻
+Sports & Fitness
+LeBron • QB • Sports Parent • Sports Enthusiast • Tailgater • Elite Competitor • Fantasy GM
+• Gym Obsessed • Weekend Warrior • Yoga Life • Runner • Cyclist • Team Player • Coach
+⸻
+QSR (Quick Service Restaurants)
+Budget-Minded • Bargain Hunter • Savvy Shopper • Road Trip • Late Night Craver • Family Feeder
+• Value Seeker • Convenience King • Drive-Thru Regular • Snacker • Treat Yourself
 ⸻
 SECTION I — PERSONAS PHYLUM MAP
 Each phylum below represents an active lane of cultural meaning within the RJM persona

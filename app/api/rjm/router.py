@@ -19,6 +19,10 @@ from app.api.rjm.schemas import (
     TranscriptionResponse,
     PersonaGenerationResponse,
     PersonaGenerationListResponse,
+    ChatSessionSummary,
+    ChatSessionListResponse,
+    ChatMessageResponse,
+    ChatSessionDetailResponse,
 )
 from app.db.supabase_db import insert_record, get_records
 from app.services.mira_chat import handle_chat_turn
@@ -28,17 +32,12 @@ from app.utils.responses import SuccessResponse, success_response
 from app.utils.auth import get_current_user_id, require_auth
 from app.services.rjm_ingredient_canon import (
     ALL_GENERATIONAL_NAMES,
-    get_category_personas,
-    get_dual_anchors,
-    infer_category as infer_ad_category,
+    infer_category_with_llm,  # Use LLM-based category detection
     is_local_brief,
-    register_personas_for_rotation,
-    register_generational_for_rotation,
-    is_persona_recent,
-    is_generational_recent,
     detect_multicultural_lineage,
     get_multicultural_expressions,
 )
+from app.services.persona_authority import PersonaAuthority
 
 router = APIRouter(prefix="/v1/rjm", tags=["rjm"])
 
@@ -98,12 +97,15 @@ async def generate_persona_program(
         
         detected_category = (
             program_json.advertising_category
-            or infer_ad_category(f"{request.brand_name} {request.brief}")
+            or infer_category_with_llm(request.brand_name, request.brief)
         )
-        category_persona_pool = get_category_personas(detected_category)
         
-        # Use dual anchors for brands that span multiple categories
-        category_anchors = get_dual_anchors(request.brand_name, detected_category)
+        # Use PersonaAuthority for governance (same as chat and RAG pipeline)
+        authority = PersonaAuthority(
+            category=detected_category,
+            brand_name=request.brand_name,
+            brief=request.brief,
+        )
 
         # Packaging text formatting per MIRA Packaging Implementation Spec
         lines: list[str] = []
@@ -114,13 +116,14 @@ async def generate_persona_program(
         lines.append("⸻")
 
         # Strip trailing periods from key identifiers for smooth sentence flow
+        # FIXED: Replaced "turn X into meaning" with cleaner phrasing per Jesse's feedback
         clean_ki = [ki.rstrip(".").strip() for ki in (program_json.key_identifiers or [])[:2]]
         ki_preview = ", ".join(clean_ki) if clean_ki else ""
         base_context = (
             ki_preview.lower() if ki_preview else "beauty, ritual, culture, and everyday expression"
         )
         sentence1 = (
-            f"Curated for those who turn {base_context} into meaning, memory, and momentum."
+            f"Curated for those who value {base_context} as expressions of meaning, memory, and momentum."
         )
         sentence2 = (
             f"This {request.brand_name} program organizes those patterns into a clear, strategist-led framework for how the brand shows up in culture."
@@ -205,48 +208,28 @@ async def generate_persona_program(
             lines.append(f"• Broad : {broad_demo}")
         lines.append("")
 
-        # 6. Persona Portfolio (~20 total with anchors & generational mix)
+        # 6. Persona Portfolio (15 core personas + 4 generational + category anchors)
+        # Use PersonaAuthority for portfolio building (same governance as chat)
         core_personas = [
             p.name for p in program_json.personas if p.name not in ALL_GENERATIONAL_NAMES
         ]
-        core_personas = _dedupe_preserve(core_personas)
-
-        core_personas = _fill_persona_list(
-            result=core_personas,
-            pool=category_persona_pool,
-            target=15,
-            excluded=ALL_GENERATIONAL_NAMES,
-            recent_checker=is_persona_recent,
-        )
-
-        # Use the generational segments from the model (extract names from GenerationalSegment objects)
-        generational_names = [seg.name for seg in generational_segments[:4]]
         
-        # Ensure we have 4 generational segments (backfill if needed)
-        if len(generational_names) < 4:
-            from app.services.rjm_ingredient_canon import GENERATIONS_BY_COHORT
-            for cohort, segments in GENERATIONS_BY_COHORT.items():
-                if len(generational_names) >= 4:
-                    break
-                has_cohort = any(name.startswith(cohort) for name in generational_names)
-                if not has_cohort and segments:
-                    # Pick one that hasn't been used recently
-                    for seg in segments:
-                        if not is_generational_recent(seg):
-                            generational_names.append(seg)
-                            break
-                    else:
-                        generational_names.append(segments[0])
+        # Build portfolio through PersonaAuthority (validates category, enforces diversity, rotation)
+        final_core = authority.build_portfolio(core_personas, target_count=15)
 
-        # Get anchors (handles dual-anchor brands like L'Oréal)
-        anchors = category_anchors[:2]
+        # Use the generational segments from the model (PersonaAuthority handles selection)
+        generational_segments = program_json.generational_segments or []
+        llm_generational_names = [seg.name for seg in generational_segments[:4]]
+        final_generational = authority.select_generational(llm_generational_names)
 
-        final_core = core_personas[:15]
-        final_generational = generational_names[:4]
-        final_portfolio = final_core + anchors + final_generational
-
-        register_personas_for_rotation([name for name in final_core if name not in highlight_names])
-        register_generational_for_rotation(final_generational)
+        # PHASE 1 FIX #4: Reinstate Ad-category anchor segments
+        # Category anchors ARE included as commercial anchors in the portfolio
+        # They do NOT have write-ups, but they anchor the program to the ad-category
+        category_anchors = authority.anchors or []
+        
+        # Final portfolio: 15 core personas + 4 generational + category anchors
+        # This creates the full 20+ segment program structure
+        final_portfolio = final_core + final_generational + category_anchors
 
         lines.append("📍 Persona Portfolio")
         lines.append(" · ".join(final_portfolio))
@@ -419,12 +402,47 @@ async def mira_chat_turn(
     - Bridges into the existing Packaging / RAG pipeline when a Persona Program is needed.
     - Returns a strategist-style reply plus the next behavioral state id.
     - Saves any generated persona programs to the database if user is authenticated.
+    - Persists all chat messages to the database for future retrieval and resumption.
 
     The client is responsible for:
     - Sending the `state` from the previous response (or omitting it for a fresh GREETING).
     - Providing `brand_name` and `brief` when ready to generate a program.
+    - Optionally sending `session_id` to continue a previous conversation.
     """
+    # Capture state before processing
+    state_before = request.state or "STATE_GREETING"
+    
+    # Get user message content
+    user_message = ""
+    if request.messages:
+        user_msgs = [m for m in request.messages if m.role == "user"]
+        if user_msgs:
+            user_message = user_msgs[-1].content
+    
     result = handle_chat_turn(request, user_id=user_id)
+    
+    # Persist chat messages to database if user is authenticated
+    if user_id and result.session_id:
+        try:
+            from app.services.chat_persistence import persist_chat_turn
+            from app.services.mira_session import get_session
+            
+            # Get session state for brand/brief/category
+            _, session_state = get_session(result.session_id)
+            
+            await persist_chat_turn(
+                session_id=result.session_id,
+                user_id=user_id,
+                user_message=user_message,
+                assistant_reply=result.reply,
+                state_before=state_before,
+                state_after=result.state,
+                brand_name=session_state.brand_name or request.brand_name,
+                brief=session_state.brief or request.brief,
+                category=session_state.category,
+            )
+        except Exception as persist_error:
+            app_logger.warning(f"Failed to persist chat turn: {persist_error}")
     
     # Check if a generation was created and save it to Supabase
     if result.generation_data and user_id:
@@ -679,3 +697,253 @@ async def get_persona_generation(
             detail=f"Failed to get persona generation: {str(e)}",
         )
 
+
+# ============================================
+# Chat Session Endpoints (History & Resumption)
+# ============================================
+
+@router.get(
+    "/sessions",
+    response_model=SuccessResponse[ChatSessionListResponse],
+    summary="List all chat sessions for the current user",
+)
+async def list_chat_sessions(
+    user_id: str = Depends(require_auth),
+    limit: int = 50,
+    offset: int = 0,
+) -> SuccessResponse[ChatSessionListResponse]:
+    """List all chat sessions for the authenticated user.
+
+    Returns sessions ordered by last activity (most recent first).
+    Use this to display chat history in the UI.
+    """
+    try:
+        from app.services.chat_persistence import get_user_chat_sessions
+        
+        sessions = await get_user_chat_sessions(user_id, limit=limit, offset=offset)
+        
+        session_summaries = [
+            ChatSessionSummary(
+                id=str(s["id"]),
+                title=s.get("title"),
+                brand_name=s.get("brand_name"),
+                category=s.get("category"),
+                message_count=s.get("message_count", 0),
+                current_state=s.get("current_state", "STATE_GREETING"),
+                created_at=s.get("created_at", ""),
+                updated_at=s.get("updated_at", ""),
+            )
+            for s in sessions
+        ]
+        
+        return success_response(
+            data=ChatSessionListResponse(
+                sessions=session_summaries,
+                total=len(session_summaries),
+            ),
+            message=f"Found {len(session_summaries)} chat sessions",
+        )
+        
+    except Exception as e:
+        app_logger.error(f"Failed to list chat sessions: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list chat sessions: {str(e)}",
+        )
+
+
+@router.get(
+    "/sessions/{session_id}",
+    response_model=SuccessResponse[ChatSessionDetailResponse],
+    summary="Get a chat session with all messages",
+)
+async def get_chat_session(
+    session_id: str,
+    user_id: str = Depends(require_auth),
+) -> SuccessResponse[ChatSessionDetailResponse]:
+    """Get a specific chat session with all its messages.
+
+    Use this to display the full conversation history when a user
+    selects a past chat to view or resume.
+    """
+    try:
+        # Validate UUID format
+        UUID(session_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid session ID format",
+        )
+
+    try:
+        from app.services.chat_persistence import get_chat_session_detail
+        
+        session = await get_chat_session_detail(session_id, user_id)
+        
+        if not session:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Chat session not found",
+            )
+        
+        messages = [
+            ChatMessageResponse(
+                id=str(m["id"]),
+                role=m["role"],
+                content=m["content"],
+                state_before=m.get("state_before"),
+                state_after=m.get("state_after"),
+                created_at=m.get("created_at", ""),
+            )
+            for m in session.get("messages", [])
+        ]
+        
+        return success_response(
+            data=ChatSessionDetailResponse(
+                id=str(session["id"]),
+                title=session.get("title"),
+                brand_name=session.get("brand_name"),
+                brief=session.get("brief"),
+                category=session.get("category"),
+                current_state=session.get("current_state", "STATE_GREETING"),
+                messages=messages,
+                created_at=session.get("created_at", ""),
+                updated_at=session.get("updated_at", ""),
+            ),
+            message="Chat session retrieved successfully",
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(f"Failed to get chat session: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get chat session: {str(e)}",
+        )
+
+
+@router.post(
+    "/sessions/{session_id}/resume",
+    response_model=SuccessResponse[ChatSessionDetailResponse],
+    summary="Resume a past chat session",
+)
+async def resume_chat_session(
+    session_id: str,
+    user_id: str = Depends(require_auth),
+) -> SuccessResponse[ChatSessionDetailResponse]:
+    """Resume a past chat session.
+
+    This endpoint:
+    1. Retrieves the session and all messages from the database
+    2. Restores the in-memory session state so the behavioral engine can continue
+    3. Returns the full session for the client to display
+
+    After calling this endpoint, the client can continue the conversation
+    by sending messages to /chat with the same session_id.
+    """
+    try:
+        # Validate UUID format
+        UUID(session_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid session ID format",
+        )
+
+    try:
+        from app.services.chat_persistence import restore_session_from_db
+        
+        session = await restore_session_from_db(session_id, user_id)
+        
+        if not session:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Chat session not found",
+            )
+        
+        messages = [
+            ChatMessageResponse(
+                id=str(m["id"]),
+                role=m["role"],
+                content=m["content"],
+                state_before=m.get("state_before"),
+                state_after=m.get("state_after"),
+                created_at=m.get("created_at", ""),
+            )
+            for m in session.get("messages", [])
+        ]
+        
+        app_logger.info(f"Resumed chat session {session_id} for user {user_id}")
+        
+        return success_response(
+            data=ChatSessionDetailResponse(
+                id=str(session["id"]),
+                title=session.get("title"),
+                brand_name=session.get("brand_name"),
+                brief=session.get("brief"),
+                category=session.get("category"),
+                current_state=session.get("current_state", "STATE_GREETING"),
+                messages=messages,
+                created_at=session.get("created_at", ""),
+                updated_at=session.get("updated_at", ""),
+            ),
+            message="Chat session resumed successfully. Continue by sending messages to /chat with this session_id.",
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(f"Failed to resume chat session: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to resume chat session: {str(e)}",
+        )
+
+
+@router.delete(
+    "/sessions/{session_id}",
+    response_model=SuccessResponse[dict],
+    summary="Delete a chat session",
+)
+async def delete_chat_session_endpoint(
+    session_id: str,
+    user_id: str = Depends(require_auth),
+) -> SuccessResponse[dict]:
+    """Delete a chat session and all its messages.
+
+    This permanently removes the conversation history.
+    """
+    try:
+        # Validate UUID format
+        UUID(session_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid session ID format",
+        )
+
+    try:
+        from app.services.chat_persistence import delete_chat_session
+        
+        deleted = await delete_chat_session(session_id, user_id)
+        
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Chat session not found",
+            )
+        
+        return success_response(
+            data={"deleted": True, "session_id": session_id},
+            message="Chat session deleted successfully",
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        app_logger.error(f"Failed to delete chat session: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete chat session: {str(e)}",
+        )

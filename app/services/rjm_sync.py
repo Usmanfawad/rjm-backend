@@ -147,7 +147,6 @@ async def sync_rjm_documents() -> Dict[str, object]:
             "file_name": path.name,
             "content_hash": content_hash,
             "chunk_count": len(chunks),
-            "last_synced_at": now,
             "updated_at": now,
         }
 
@@ -156,7 +155,6 @@ async def sync_rjm_documents() -> Dict[str, object]:
             doc_data["relative_path"] = rel_path
             doc_data["chunk_size"] = DEFAULT_CHUNK_SIZE
             doc_data["chunk_overlap"] = DEFAULT_CHUNK_OVERLAP
-            doc_data["created_at"] = now
             await insert_record("rjm_documents", doc_data)
         else:
             await update_record("rjm_documents", doc_id, doc_data)

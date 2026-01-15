@@ -83,6 +83,21 @@ class ProgramJSON(BaseModel):
         max_length=4,
         description="4 generational segments (one per cohort: Gen Z, Millennial, Gen X, Boomer) with highlights.",
     )
+    category_anchors: List[str] = Field(
+        default_factory=list,
+        max_length=2,
+        description="Ad-category anchor segments (e.g., 'RJM CPG', 'RJM Luxury & Fashion'). Always included.",
+    )
+    multicultural_expressions: List[str] = Field(
+        default_factory=list,
+        max_length=5,
+        description="Multicultural expression overlays. Only included when brief requires multicultural targeting.",
+    )
+    local_culture_segments: List[str] = Field(
+        default_factory=list,
+        max_length=10,
+        description="Local culture DMA segments. Only included for geo-targeted campaigns.",
+    )
     persona_insights: List[str] = Field(
         default_factory=list,
         description="Up to 3 persona insight bullets.",
@@ -293,6 +308,61 @@ class PersonaGenerationListResponse(BaseModel):
         description="List of persona generations"
     )
     total: int = Field(default=0, description="Total number of generations")
+
+
+# ============================================
+# Chat Session Schemas (for persistence)
+# ============================================
+
+class ChatSessionSummary(BaseModel):
+    """Summary of a chat session for listing."""
+
+    id: str = Field(..., description="Unique session identifier")
+    title: Optional[str] = Field(default=None, description="Session title (auto-generated from first message or brand)")
+    brand_name: Optional[str] = Field(default=None, description="Brand name if captured")
+    category: Optional[str] = Field(default=None, description="Detected advertising category")
+    message_count: int = Field(default=0, description="Number of messages in this session")
+    current_state: str = Field(default="STATE_GREETING", description="Current behavioral state")
+    created_at: str = Field(..., description="ISO timestamp of session creation")
+    updated_at: str = Field(..., description="ISO timestamp of last activity")
+
+
+class ChatSessionListResponse(BaseModel):
+    """Response schema for listing chat sessions."""
+
+    sessions: List[ChatSessionSummary] = Field(
+        default_factory=list,
+        description="List of chat sessions"
+    )
+    total: int = Field(default=0, description="Total number of sessions")
+
+
+class ChatMessageResponse(BaseModel):
+    """Response schema for a single chat message."""
+
+    id: str = Field(..., description="Message unique identifier")
+    role: Literal["user", "assistant"] = Field(..., description="Message role")
+    content: str = Field(..., description="Message content")
+    state_before: Optional[str] = Field(default=None, description="Behavioral state before this message")
+    state_after: Optional[str] = Field(default=None, description="Behavioral state after this message")
+    created_at: str = Field(..., description="ISO timestamp of message creation")
+
+
+class ChatSessionDetailResponse(BaseModel):
+    """Full chat session with all messages for resumption."""
+
+    id: str = Field(..., description="Unique session identifier")
+    title: Optional[str] = Field(default=None, description="Session title")
+    brand_name: Optional[str] = Field(default=None, description="Brand name if captured")
+    brief: Optional[str] = Field(default=None, description="Campaign brief if captured")
+    category: Optional[str] = Field(default=None, description="Detected advertising category")
+    current_state: str = Field(default="STATE_GREETING", description="Current behavioral state for resumption")
+    messages: List[ChatMessageResponse] = Field(
+        default_factory=list,
+        description="All messages in chronological order"
+    )
+    created_at: str = Field(..., description="ISO timestamp of session creation")
+    updated_at: str = Field(..., description="ISO timestamp of last activity")
 
 
 
