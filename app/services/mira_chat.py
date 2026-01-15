@@ -94,8 +94,11 @@ MIRA_TOOLS = [
                 "Generate an RJM Persona Program for a brand. Use this when: "
                 "1) The user has provided enough context about their brand/campaign, "
                 "2) The conversation has naturally led to a point where a persona program would be valuable, "
-                "3) The user explicitly asks for personas or a program. "
-                "IMPORTANT: Build a DETAILED brief from the conversation context."
+                "3) The user explicitly asks for personas or a program, "
+                "4) The user asks to REGENERATE or create a NEW/DIFFERENT program with revised guidance. "
+                "IMPORTANT: Build a DETAILED brief from the conversation context. "
+                "If user explicitly requests a new program or regeneration (even for the same brand), "
+                "set regenerate=true to create a fresh program."
             ),
             "parameters": {
                 "type": "object",
@@ -117,6 +120,14 @@ MIRA_TOOLS = [
                             "retail sales by connecting with value-conscious families who prioritize skin health "
                             "and everyday comfort. National campaign focus.' "
                             "Example BAD brief: 'Gold Bond marketing campaign' (too generic, will produce weak results)"
+                        )
+                    },
+                    "regenerate": {
+                        "type": "boolean",
+                        "description": (
+                            "Set to true when user explicitly asks to regenerate, create a new program, "
+                            "or revise the existing program. This allows creating a fresh program even if "
+                            "one already exists for this session."
                         )
                     }
                 },
@@ -814,6 +825,28 @@ GOOD: "We covered the channel strategy — want me to dive into the creative ang
 for CTV, or should we talk budget and timeline?"
 
 ═══════════════════════════════════════════════════════════════════════════════
+PROGRAM REGENERATION - CRITICAL
+═══════════════════════════════════════════════════════════════════════════════
+
+When a user EXPLICITLY asks to:
+- "Create a new persona program"
+- "Regenerate the program"
+- "Give me a different program"
+- "Redo the personas"
+- "I want different personas"
+- "Create another program"
+- "Make a new one"
+
+You MUST call generate_persona_program with regenerate=true.
+
+DO NOT refuse to regenerate. DO NOT say "the program already exists."
+If the user explicitly requests a new program, GENERATE IT.
+
+This is a trust-breaking failure if you refuse multiple times when the user
+explicitly asks for regeneration. The user has the right to request as many
+programs as they want with different guidance.
+
+═══════════════════════════════════════════════════════════════════════════════
 RJM KNOWLEDGE BASE - REAL JUICE MEDIA
 ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1077,22 +1110,30 @@ def execute_tool(tool_name: str, arguments: dict, session_id: str) -> Tuple[str,
     elif tool_name == "generate_persona_program":
         brand_name = arguments.get("brand_name", "")
         brief = arguments.get("brief", "")
+        regenerate = arguments.get("regenerate", False)
 
         if not brand_name or not brief:
             return "I need both a brand name and brief to generate a persona program.", None
 
-        # Prevent double generation in same session (MUST check and set atomically)
+        # Check if a program already exists for this session
         _, session_state = get_session(session_id)
-        if session_state and getattr(session_state, 'program_generated', False):
+        program_exists = session_state and getattr(session_state, 'program_generated', False)
+        
+        # FIXED: Allow regeneration when user explicitly requests it
+        if program_exists and not regenerate:
             existing_summary = get_program_summary(session_id)
             return (
                 f"PROGRAM ALREADY EXISTS for this session.\n\n"
                 f"The persona program is available in the Programs tab.\n"
                 f"Summary: {existing_summary or 'See Programs tab'}\n\n"
-                f"Tell the user their program is ready in the Programs tab. "
-                f"Do NOT generate another program unless they explicitly request a NEW one "
-                f"with different brand/brief parameters.",
+                f"If the user wants a NEW or REVISED program, call generate_persona_program again "
+                f"with regenerate=true. This will create a fresh program with updated guidance.",
                 None
+            )
+        
+        if regenerate and program_exists:
+            app_logger.info(
+                f"REGENERATING persona program for '{brand_name}' - user explicitly requested new program"
             )
 
         # Set flag IMMEDIATELY to prevent race conditions - before any generation
@@ -1149,10 +1190,10 @@ def execute_tool(tool_name: str, arguments: dict, session_id: str) -> Tuple[str,
                 "⸻",
             ]
 
-            # Write-up
+            # Write-up - FIXED: Replaced "turn X into meaning" with cleaner phrasing
             clean_ki = [ki.rstrip(".").strip() for ki in (program_json.key_identifiers or [])[:2]]
             ki_context = ", ".join(clean_ki) if clean_ki else "identity, culture, and everyday expression"
-            sentence1 = f"Curated for those who turn {ki_context.lower()} into meaning, memory, and momentum."
+            sentence1 = f"Curated for those who value {ki_context.lower()} as expressions of meaning, memory, and momentum."
             sentence2 = f"This {brand_name} program organizes those patterns into a clear, strategist-led framework for how the brand shows up in culture."
             lines.append(f"{sentence1} {sentence2}")
             lines.append("")
@@ -1175,9 +1216,10 @@ def execute_tool(tool_name: str, arguments: dict, session_id: str) -> Tuple[str,
             final_core = authority.build_portfolio(llm_persona_names, target_count=15)
             
             # Select highlights through PersonaAuthority (ensures freshness, no overlap)
+            # FIXED: Must be exactly 4 highlights per spec (3 core + 1 generational)
             personas_with_highlight = [p for p in program_json.personas if getattr(p, "highlight", None)]
             highlight_candidates = [p.name for p in personas_with_highlight if p.name not in ALL_GENERATIONAL_NAMES]
-            highlight_names = authority.select_highlights(highlight_candidates, count=3)
+            highlight_names = authority.select_highlights(highlight_candidates, count=4)
             
             # Map highlight names back to personas for display
             highlight_personas = []
@@ -1192,13 +1234,23 @@ def execute_tool(tool_name: str, arguments: dict, session_id: str) -> Tuple[str,
             llm_generational_names = [seg.name for seg in generational_segments]
             final_generational = authority.select_generational(llm_generational_names)
             
-            # Build highlights section (3 core + 1 generational)
+            # Build highlights section (EXACTLY 4 total: prefer 3 core + 1 generational, but can be 4 core)
             lines.append("✨ Persona Highlights")
-            highlights = list(highlight_personas[:3])
+            highlights = list(highlight_personas[:4])  # Get up to 4 core personas with highlights
             
-            # Add generational highlight if available
-            if generational_segments and len(highlights) < 4:
+            # If we have fewer than 4 core highlights, add generational to fill
+            if len(highlights) < 4 and generational_segments:
                 highlights.append(generational_segments[0])
+            
+            # CRITICAL: Ensure exactly 4 highlights - backfill if needed
+            while len(highlights) < 4 and highlight_personas:
+                # Try to add more from highlight_personas if available
+                for hp in highlight_personas:
+                    if hp not in highlights and len(highlights) < 4:
+                        highlights.append(hp)
+                        break
+                else:
+                    break  # No more to add
 
             for item in highlights[:4]:
                 if hasattr(item, 'highlight') and item.highlight:

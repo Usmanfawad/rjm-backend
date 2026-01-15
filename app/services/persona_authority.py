@@ -327,7 +327,7 @@ class PersonaAuthority:
     def select_highlights(
         self,
         available_personas: List[str],
-        count: int = 3,
+        count: int = 4,
         prefer_fresh: bool = True
     ) -> List[str]:
         """Select personas for highlights, ensuring diversity and freshness.
@@ -338,17 +338,27 @@ class PersonaAuthority:
         PHASE 1 FIX #2: Selected personas are tracked and MUST NOT appear
         in insights section.
         
+        PHASE 1 FIX (NEW): Hot persona clustering prevention - max 1 hot persona
+        in highlights for Travel & Hospitality to break the Romantic Voyager /
+        Retreat Seeker / Island Hopper cluster.
+        
         Rules:
         - Must be from category pool
         - Prefer personas not recently highlighted
         - Apply rotation weight (hot personas get penalty)
         - Ensure phylum diversity
+        - MAX 1 hot persona per highlight set (for Travel & Hospitality)
         - Return up to `count` personas
         """
         import random
         
         selected = []
         phyla_used = set()
+        hot_count = 0  # Track hot personas selected
+        
+        # Max hot personas allowed in highlights
+        # For Travel & Hospitality: limit to 1 to break clustering
+        max_hot = 1 if self.category == "Travel & Hospitality" else 2
         
         # Build weighted candidate list with rotation pressure
         candidates = []
@@ -385,17 +395,27 @@ class PersonaAuthority:
             if phylum and phylum in phyla_used and len(selected) < 2:
                 continue  # Allow overlap only after we have at least 2
             
+            # PHASE 1 FIX: Hot persona clustering prevention
+            # Limit hot personas in highlights to prevent the same cluster appearing
+            if is_hot_persona(name, self.category) and hot_count >= max_hot:
+                app_logger.debug(
+                    f"Skipping hot persona '{name}' - already have {hot_count} hot personas in highlights"
+                )
+                continue
+            
             selected.append(name)
             self.context.add_to_highlights(name)  # PHASE 1 FIX #2: Track for insight exclusion
             if phylum:
                 phyla_used.add(phylum)
+            if is_hot_persona(name, self.category):
+                hot_count += 1
         
         # Register for rotation
         _register_used_highlights(selected)
         
         app_logger.info(
             f"Selected {len(selected)} highlight personas with rotation: {selected} "
-            f"(rotation pressure applied to {sum(1 for p in selected if is_hot_persona(p, self.category))} hot personas)"
+            f"(hot personas: {hot_count}/{max_hot} max allowed)"
         )
         return selected
     

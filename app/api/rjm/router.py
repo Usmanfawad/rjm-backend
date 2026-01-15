@@ -116,13 +116,14 @@ async def generate_persona_program(
         lines.append("⸻")
 
         # Strip trailing periods from key identifiers for smooth sentence flow
+        # FIXED: Replaced "turn X into meaning" with cleaner phrasing per Jesse's feedback
         clean_ki = [ki.rstrip(".").strip() for ki in (program_json.key_identifiers or [])[:2]]
         ki_preview = ", ".join(clean_ki) if clean_ki else ""
         base_context = (
             ki_preview.lower() if ki_preview else "beauty, ritual, culture, and everyday expression"
         )
         sentence1 = (
-            f"Curated for those who turn {base_context} into meaning, memory, and momentum."
+            f"Curated for those who value {base_context} as expressions of meaning, memory, and momentum."
         )
         sentence2 = (
             f"This {request.brand_name} program organizes those patterns into a clear, strategist-led framework for how the brand shows up in culture."

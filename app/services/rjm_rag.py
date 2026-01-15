@@ -525,8 +525,9 @@ def generate_program_with_rag(request: GenerateProgramRequest) -> ProgramJSON:
 
     # === USE PERSONA AUTHORITY FOR HIGHLIGHT SELECTION ===
     # Select highlights through PersonaAuthority (ensures freshness, diversity)
+    # FIXED: Must be exactly 4 highlights per spec (3 core + 1 generational = 4 total)
     personas_with_highlights = [p.name for p in valid_personas if p.highlight]
-    highlight_names = authority.select_highlights(personas_with_highlights, count=3)
+    highlight_names = authority.select_highlights(personas_with_highlights, count=4)
     
     # Register highlight names in authority context
     for name in highlight_names:

@@ -383,9 +383,14 @@ def get_rotation_weight(name: str, category: str, recency_position: int = -1) ->
     """
     weight = 1.0
     
-    # Hot persona penalty
+    # Hot persona penalty - STRONGER for Travel & Hospitality to break the clustering
     if is_hot_persona(name, category):
-        weight *= 0.6  # 40% penalty for being a "hot" persona
+        if category == "Travel & Hospitality":
+            # PHASE 1 FIX: Extra strong penalty for Travel hot personas
+            # This breaks the Romantic Voyager / Retreat Seeker / Island Hopper cluster
+            weight *= 0.25  # 75% penalty for Travel hot personas
+        else:
+            weight *= 0.6  # 40% penalty for being a "hot" persona
     
     # Recency penalty (if recently used)
     if recency_position >= 0:
